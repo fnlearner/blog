@@ -78,5 +78,5 @@ theme: landscape
 ## Docs: https://hexo.io/docs/deployment.html
 deploy:
   type: git
-  repo: https://github.com/fnlearner/Personal_Blog.git
+  repo: https://github.com/fnlearner/fnlearner.github.io.git
   branch: master
