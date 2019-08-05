@@ -58,3 +58,7 @@ tags:
 
 ##### 删除文件夹
 `git rm -r <fileName>`
+
+
+##### 下载指定仓库(这个就不用多说了)
+`git clone <repoUrl>`
