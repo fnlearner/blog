@@ -1,5 +1,5 @@
 ---
-title: git_command
+title: git常用命令集合
 date: 2019-08-05 14:08:26
 tags:
 ---
