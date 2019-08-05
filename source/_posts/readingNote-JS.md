@@ -60,7 +60,7 @@ addTwoNum.myBind(obj2,2,2)();//4 1
 addTwoNum.myBind(obj2)(2,2);//4 1
 ```
 
-### 迭代器iterator
+## 三、迭代器iterator
 
 iteraotr接口部署在Symbol.iterator上，一些内置类型拥有默认的迭代器行为，其他类型（如 Object）则没有。下表中的内置类型拥有默认的@@iterator方法：
 
@@ -194,7 +194,7 @@ for(let i of bianpinghua(arr)){
 ```
 
 
-### 五 var  let const 
+## 五 var  let const 
 
 ### var
 
@@ -216,6 +216,7 @@ function test(){
 }
 
 ```
+### let const
 let 和 const 声明的变量不会像var一样造成变量提升,let 和const 声明的变量只有在声明之后才能使用, let声明的变量会造成TDZ(暂时性死区)，在声明变量之前调用会抛出错误 ReferenceError
 const 声明的变量不允许重新赋值，但是允许修改引用地址
 
