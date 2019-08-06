@@ -1,7 +1,8 @@
 ---
 title: 基于Hexo搭建个人博客
 date: 2019-08-05 14:48:50
-tags:
+tags: hexo blog
+categories: tool
 ---
 
 ## 准备工作
