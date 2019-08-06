@@ -9,6 +9,7 @@ tags:
 1. 安装Node
 2. 安装hexo-cli
 3. 确保有github账号
+4. 安装git
 
 ## 构建hexo项目
 
@@ -46,7 +47,21 @@ hexo g
 hexo d
 ```
 
+### 更换主题
+我选择的是next，拥有丰富而简单的配置，结合第三方服务，打造属于您自己的博客,在hexo根目录运行以下命令，会在themes文件夹下生成一个next的子模块
+```
+$ git submodule add https://github.com/iissnan/hexo-theme-next themes/next
+```
+在根目录下的_config.yml配置theme：next主题就可以生效了(关于更多submodule用法自行google)
+
+
+
 ##  访问
-### 部署完成后就可以直接访问了，在浏览器输入栏中输入xxx.github.io即可（xxx为你的GitHub账号名称）
+ 部署完成后就可以直接访问了，在浏览器输入栏中输入xxx.github.io即可（xxx为你的GitHub账号名称）
 
-
+## 注意
+1. 记得把你的代码push到你的remote repo上，不然只能在一台电脑做开发啦
+2. 另外，由于在当前仓库下有子模块存在，因此当你在另外一台电脑clone你的项目的时候，子模块是不会自动更新的,所以请运行以下命令来更新子模块，否则项目不完整
+```
+ git submodule update --init --recursive
+```
