@@ -433,6 +433,8 @@ console.log(arr.indexOf(4))//-1
 {}+1==1//true ,对于加法运算，JS会把运算符两侧的对象调用toPrimitive方法，因此等式变成''+1==1->'1'==1->1==1
 ```
 
+
 ## 总结
 
-更新中...
+
+<blockquote class="blockquote-center">我会努力更新的</blockquote>

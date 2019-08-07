@@ -62,3 +62,10 @@ categories: tool
 
 ##### 下载指定仓库(这个就不用多说了)
 `git clone <repoUrl>`
+
+
+### 添加子模块到当前仓库中
+`git submodule add <repo url>`
+
+### clone带有子模块的仓库时需要更新子模块
+`git submodule update --init --recursive`

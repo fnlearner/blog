@@ -5,7 +5,7 @@
 # Site
 title: Personal Blog
 subtitle:
-description: ZJS'S Blog
+description: 你找到我了呀
 keywords:
 author: ZJS
 language: zh-CN 
@@ -34,7 +34,7 @@ titlecase: false # Transform title into titlecase
 external_link: true # Open external links in new tab
 filename_case: 0
 render_drafts: false
-post_asset_folder: false
+post_asset_folder: true
 relative_link: false
 future: true
 highlight:
@@ -80,3 +80,9 @@ deploy:
   type: git
   repo: https://github.com/fnlearner/fnlearner.github.io.git
   branch: master
+# search enable
+search:
+  path: search.xml
+  field: post
+  format: html
+  limit: 10000
