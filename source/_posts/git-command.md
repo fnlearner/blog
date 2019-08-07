@@ -15,6 +15,7 @@ categories: tool
 ##### 提交暂存区的修改到当前分支
 `git commit `
 
+<!-- more -->
 ##### 把当前分支提交的修改推送到远程仓库去
 `git push origin master`
 
@@ -64,8 +65,8 @@ categories: tool
 `git clone <repoUrl>`
 
 
-### 添加子模块到当前仓库中
+##### 添加子模块到当前仓库中
 `git submodule add <repo url>`
 
-### clone带有子模块的仓库时需要更新子模块
+##### clone带有子模块的仓库时需要更新子模块
 `git submodule update --init --recursive`

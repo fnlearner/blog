@@ -27,7 +27,7 @@ testObj=Object.create(Testfoo.prototype);//创建一个具有Testfoo的原型链
 Testfoo.call(testObj);//指定this
 console.log('testObj',testObj.sayHello());//输出hello
 ```
-
+<!-- more -->
 ## call和bind实现
 
 ### call
