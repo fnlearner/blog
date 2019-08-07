@@ -432,8 +432,45 @@ console.log(arr.indexOf(4))//-1
 0=={}//true
 {}+1==1//true ,对于加法运算，JS会把运算符两侧的对象调用toPrimitive方法，因此等式变成''+1==1->'1'==1->1==1
 ```
+## 闭包
 
+JS中对闭包的解释是在函数中调用另一个函数
+```
+function test(a){
+    return function inner(){
+        return ++a;
+    }
+}
+let a = 2;
+const testVim = test(a);//testVim 在没有销毁时始终占有function inner的内存地址
 
+console.log("testVim:", testVim());//3
+console.log("testVim:", testVim());//4
+console.log("testVim:", testVim());//5
+```
+
+```
+function makeSizer(size) {
+  return function() {
+    document.body.style.fontSize = size + 'px';
+  };
+}
+
+var size12 = makeSizer(12);
+var size14 = makeSizer(14);
+var size16 = makeSizer(16);
+```
+size12，size14 和 size16 三个函数将分别把 body 文本调整为 12，14，16 像素。我们可以将它们分别添加到按钮的点击事件上。如下所示：
+```
+document.getElementById('size-12').onclick = size12;
+document.getElementById('size-14').onclick = size14;
+document.getElementById('size-16').onclick = size16;
+```
+```
+<a href="#" id="size-12">12</a>
+<a href="#" id="size-14">14</a>
+<a href="#" id="size-16">16</a>
+```
 ## 总结
 
 

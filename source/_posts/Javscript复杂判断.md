@@ -22,7 +22,7 @@ const flag = (status)=>{
     //...
 }
 ```
-
+<!--more -->
 或许还可以用switch-case的写法
 ### switch-case
 
