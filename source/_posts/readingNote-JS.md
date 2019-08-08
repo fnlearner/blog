@@ -471,6 +471,81 @@ document.getElementById('size-16').onclick = size16;
 <a href="#" id="size-14">14</a>
 <a href="#" id="size-16">16</a>
 ```
+
+## 统计同一个字符串中出现次数最多的字符
+
+### 正则
+
+用正则匹配，\w可以用.代替
+```
+let str ='aaaaaaaabbbbbccccccccccccc';
+let getMaxCount = (str)=>{
+    const reg = /(\w)\1+/g;
+    const result = str.match(reg);
+    let finalResult = result.map(item=>{
+        return {
+            length:item.length,
+            item:item[0]
+        }
+    }).sort((a,b)=>{
+        return a.length-b.length<0
+    });
+    // console.log(finalResult)
+    return finalResult[0];
+}
+getMaxCount(str);
+```
+### reduce
+```
+let getMaxCount_2 = (str)=>{
+    let temp = str.split("");
+    let result  = temp.reduce((obj,cur)=>{
+        obj[cur] = ++obj[cur]||1;
+        return obj;
+    },{});
+    let max = {
+        len:0,
+        item:''
+    };
+    for(let index in result){
+        if(result[index]>max.len){
+            max.len = result[index];
+            max.item = index;
+        }
+    }
+    return max;
+}
+getMaxCount_2(str);
+
+```
+## 数组去重
+
+```
+const isUnique = (arr)=>{
+    const equals = (a, b) => {
+        if (a === b) return true;
+        if (a instanceof Date && b instanceof Date) return a.getTime() === b.getTime();
+        if (!a || !b || (typeof a !== 'object' && typeof b !== 'object')) return a === b;
+        if (a === null || a === undefined || b === null || b === undefined) return false;
+        if (a.prototype !== b.prototype) return false;
+        let keys = Object.keys(a);
+        if (keys.length !== Object.keys(b).length) return false;
+        return keys.every(k => equals(a[k], b[k]));
+      };
+    
+    for(let i =0;i<arr.length;i++){
+        for(let j =i+1;j<arr.length;j++){
+            if(!!equals(arr[i],arr[j])){
+                arr.splice(j,1);
+                j--;
+            }
+        }
+    }
+    return arr;
+}
+isUnique([123, [1, 2, 3], [1, "2", 3], [1, 2, 3], "meili",{a:1,b:1},{b:1,a:1}]);
+```
+
 ## 总结
 
 
