@@ -70,3 +70,18 @@ categories: tool
 
 ##### clone带有子模块的仓库时需要更新子模块
 `git submodule update --init --recursive`
+
+
+##### 初始化本地仓库
+`git init`
+
+##### 添加远程仓库
+`git remote add [option_name] [repo_url]`
+
+##### 从远程仓库拉取文件
+`git pull origin master`
+`git pull origin master --allow-unrelated-histories`
+
+##### 查看远程仓库地址
+`git remote -v`
+
