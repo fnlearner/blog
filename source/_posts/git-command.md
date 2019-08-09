@@ -32,7 +32,10 @@ categories: tool
 `git stash`
 
 ##### 在工作区显示刚刚在statsh保存的代码以及文件
-`git apply`
+`git stash apply`
+
+##### 查看保存在stash的记录
+`git stash list`
 
 ##### 撤销某一个操作，并且把当前撤销操作当成一次新的commit提交
 `git revert HEAD|<commitid>`
