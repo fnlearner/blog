@@ -59,3 +59,9 @@
 
 点击[这里](/u/dtid_a34a6d87e4a5fcbe/p/dev-demo/git/branches)前往查看 `new feature` 分支。
 
+=======
+# blog_config
+
+This is my blog config
+
+[hexo_docs](https://hexo.io/docs/configuration.html)
