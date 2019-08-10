@@ -545,6 +545,46 @@ const isUnique = (arr)=>{
 }
 isUnique([123, [1, 2, 3], [1, "2", 3], [1, 2, 3], "meili",{a:1,b:1},{b:1,a:1}]);
 ```
+## 数组转链表
+```
+/**
+*链表节点
+*param {*} val
+*param {ListNode} next
+**/
+function ListNode(val,next=null){
+    this.val = val;
+    this.next = next;
+}
+
+/**
+*将数组转为链表
+*param {array} a
+*param {ListNode} 
+**/
+const getListFromArray=a=>{
+    let dummy = new ListNode()
+    let pre =dummy;
+    a.forEach(x => {
+        return pre=pre.next=new ListNode(x);
+    });
+    return dummy.next;
+}
+
+/**
+*将链表转为数组
+*param {array} 
+*param {ListNode} node 
+**/
+const getArrayFromList = index=>{
+    let a=[];
+    while(node){
+        a.push(node.val);
+        node = node.next;
+    }
+    return a;
+}
+```
 
 ## 总结
 
