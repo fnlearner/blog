@@ -97,7 +97,7 @@ function DiyIterator(){
 }
 ```
 String, Array, TypedArray, Map and Set 是所有内置可迭代对象， 因为它们的原型对象都有一个 @@iterator 方法.Object没有部署iterator接口，所以当执行这样的语句时，就会报错
-![图片alt](https://user-gold-cdn.xitu.io/2019/6/27/16b998bea55f3d96?imageView2/0/w/1280/h/960/format/webp/ignore-error/1)
+![图片](https://user-gold-cdn.xitu.io/2019/6/27/16b998bea55f3d96?imageView2/0/w/1280/h/960/format/webp/ignore-error/1)
 
 遍历对象可以用for..in..(for...in语句以任意顺序遍历一个对象自有的、继承的、可枚举的、非Symbol的属性。对于每个不同的属性，语句都会被执行。),或者用Object.entries(),Object.keys(),Object.values(),或者可以自己实现一个iterator接口，然后就成了这样
 
@@ -585,7 +585,165 @@ const getArrayFromList = index=>{
     return a;
 }
 ```
+## Map,Set,WeakMap,WeakSet
 
+### Map
+Map 对象保存键值对。任何值(对象或者原始值) 都可以作为一个键或一个值
+new Map([iterable])
+Iterable 可以是一个数组或者其他 iterable 对象，其元素为键值对(两个元素的数组，例如: [[ 1, 'one' ],[ 2, 'two' ]])。 每个键值对都会添加到新的 Map。null 会被当做 undefined
+
+Objects 和 Maps 类似的是，它们都允许你按键存取一个值、删除键、检测一个键是否绑定了值。因此（并且也没有其他内建的替代方式了）过去我们一直都把对象当成 Maps 使用。不过 Maps 和 Objects 有一些重要的区别，在下列情况里使用 Map 会是更好的选择：
+
++ 一个Object的键只能是字符串或者 Symbols，但一个 Map 的键可以是任意值，包括函数、对象、基本类型。
++ Map 中的键值是有序的，而添加到对象中的键则不是。因此，当对它进行遍历时，Map 对象是按插入的顺序返回键值。
++ 你可以通过 size 属性直接获取一个 Map 的键值对个数，而 Object 的键值对个数只能手动计算。
++ Map 可直接进行迭代，而 Object 的迭代需要先获取它的键数组，然后再进行迭代。
+Object 都有自己的原型，原型链上的键名有可能和你自己在对象上的设置的键名产生冲突。虽然 ES5 开始可以用 map = Object.create(null) 来创建一个没有原型的对象，但是这种用法不太常见。
++ Map 在涉及频繁增删键值对的场景下会有些性能优势。
+
+```
+let map = new Map([
+[0,0];
+]);
+map.size;//1
+for(let key of map.keys()){
+    console.log(key)//0
+}
+for(let [key,value] of map.keys()){
+    console.log(key,value)//0 0
+}
+for(let value of map.keys()){
+    console.log(value)//0 0
+}
+map.clear()//清楚map对象所有键值对
+map.delete(key)/*如果 Map 对象中存在该元素，则移除它并返回 true；否则如果该元素不存在则返回 false */
+map.get(key)/*返回键对应的值，如果不存在，则返回undefined。*/
+map.set(key,value);/*设置Map对象中键的值。返回该Map对象。*/
+map.has(key)/*返回一个布尔值，表示Map实例是否包含键对应的值。*/
+```
+
++ NaN 也可以作为Map对象的键。虽然 NaN 和任何值甚至和自己都不相等(NaN !== NaN 返回true)，但下面的例子表明，NaN作为Map的键来说是没有区别的:
+
+```
+var myMap = new Map();
+myMap.set(NaN, "not a number");
+
+myMap.get(NaN); // "not a number"
+
+
+// 使用Array.from函数可以将一个Map对象转换成一个二维键值对数组
+var kvArray = [["key1", "value1"], ["key2", "value2"]];
+var myMap = new Map(kvArray);
+
+console.log(Array.from(myMap)); // 输出和kvArray相同的数组
+```
+
+Map对象间可以进行合并，但是会保持键的唯一性
+
+```
+var first = new Map([
+  [1, 'one'],
+  [2, 'two'],
+  [3, 'three'],
+]);
+
+var second = new Map([
+  [1, 'uno'],
+  [2, 'dos']
+]);
+
+// 合并两个Map对象时，如果有重复的键值，则后面的会覆盖前面的。
+// 展开运算符本质上是将Map对象转换成数组。
+var merged = new Map([...first, ...second]);
+
+console.log(merged.get(1)); // uno
+console.log(merged.get(2)); // dos
+console.log(merged.get(3)); // three
+```
+
+Map对象也能与数组合并：
+```
+var merged = new Map([...first, ...second, [1, 'eins']]);
+```
+
+### Set
+new Set([iterable]);
++ 如果传递一个可迭代对象，它的所有元素将不重复地被添加到新的 Set中。如果不指定此参数或其值为null，则新的 Set为空。
++ Set 对象允许你存储任何类型的唯一值，无论是原始值或者是对象引用。
+ES6的这个Set结构出来以后一直被当作一个去重的的一个省时省力的结构，前提是去重的元素不是引用类型的。
+![图片](/images/readingNote/set_example.png)
+
+```
+let arr =[1,2,4,5,6,1,2];
+let set2= new Set(arr);//1,2,3,4,5,6  生成的是Set结构，不是Array结构
+```
+方法：
+```
+add(value) 
+//在Set对象尾部添加一个元素。返回该Set对象。
+clear()
+//移除Set对象内的所有元素。
+delete(value)
+//移除Set的中与这个值相等的元素
+entries()
+//返回一个新的迭代器对象,[value,value]数组，为了使这个方法和Map对象保持相似， 每个值的键和值相等。
+has()
+//返回一个布尔值，表示该值在Set中存在与否。
+values()
+//返回一个新的迭代器对象，该对象包含Set对象中的按插入顺序排列的所有元素的值。
+```
+
+### WeakMap
+WeakMap 对象是一组键/值对的集合，其中的键是弱引用的。其键必须是对象，而值可以是任意的。
+new WeakMap([iterable])
+Iterable 是一个数组（二元数组）或者其他可迭代的且其元素是键值对的对象。每个键值对会被加到新的 WeakMap 里。null 会被当做 undefined
+
+WeakMap 的 key 只能是 Object 类型。 原始数据类型 是不能作为 key 的（比如 Symbol）。
+WeakMap 的 key是不可枚举的，因为它的弱引用机制，不确保key是否会被GC;没有部署迭代器，不能用for循环遍及
+```
+delete(key)
+get(key)
+has(key)
+set(key,value)
+```
+当WeakMap里面的key设置为null时，WeakMap里面将不再存储key=null的映射，取消内存引用避免造成内存泄漏，从而使得不再被使用的key能被正确GC.
+
+### WeakSet
+WeakSet 对象允许你将弱保持对象存储在一个集合中。
+new WeakSet([iterable]);
+如果传入一个可迭代对象作为参数, 则该对象的所有迭代值都会被自动添加进生成的 WeakSet 对象中.
+WeakSet 对象是一些对象值的集合, 并且其中的每个对象值都只能出现一次.
+
+它和 Set 对象的区别有两点:
+
++ WeakSet 对象中只能存放对象引用, 不能存放值, 而 Set 对象都可以.
++ WeakSet 对象中存储的对象值都是被弱引用的, 如果没有其他的变量或属性引用这个对象值, 则这个对象值会被当成垃圾回收掉. 正因为这样, WeakSet 对象是无法被枚举的, 没有办法拿到它包含的所有元素.
+
+方法:
+```
+clear()
+delete(value)
+get(value)
+has(value)
+add(value)
+```
+example:
+```
+var ws = new WeakSet();
+var obj = {};
+var foo = {};
+
+ws.add(window);
+ws.add(obj);
+
+ws.has(window); // true
+ws.has(foo);    // false, 对象 foo 并没有被添加进 ws 中 
+
+ws.delete(window); // 从集合中删除 window 对象
+ws.has(window);    // false, window 对象已经被删除了
+
+ws.clear(); // 清空整个 WeakSet 对象
+```
 ## 总结
 
 
