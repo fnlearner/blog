@@ -120,5 +120,78 @@ const regx_ip=/^((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?
   };
 ```
 
+### 深克隆
+```
+const isObject = (item)=>{
+  return Object.prototype.toString.call(item) === '[object Object]';
+}
+const isArray = (item)=>{
+  return Object.prototype.toString.call(item) === '[object Array]';
+}
+const isDate = item =>{
+  return Object.prototype.toString.call(item) === '[object Date]';
+}
+const isFunction = item =>{
+  return Object.prototype.toString.call(item) === '[object Function]';
+}
+const deepClone=function(obj){
+    const cloneObj=isArray(obj)?[]:isObject(obj)?{}:'';
+    for(let key in obj){
+      if(obj.hasOwnProperty(key)){
+        if(isObject(obj[key])||isArray(obj[key])){
+          Object.assign(cloneObj,{
+           [key]: deepClone(Reflect.get(obj,key))
+          });
+        }
+        else{
+          cloneObj[key] = obj[key];
+        }  
+      }
+    }
+    return cloneObj;
+}
+
+```
+
+### 基于现有对象的自定义方法
+
+PS:(不建议直接污染原型链，类型Date.prototype.xxx=function(){}这样的写法)
+
+个人比较喜欢寄生组合继承或者es6的calss继承，比如要写一个基于Date的format方法
+
+```
+class DateSelf extends Date{
+  constructor(){
+    super();
+  }
+  getAll(begin,end){
+    let arr=[];
+    var ab = begin.split("-");
+    var ae = end.split("-");
+    var db = new Date();
+    db.setUTCFullYear(ab[0], ab[1] - 1, ab[2]);
+    var de = new Date();
+    de.setUTCFullYear(ae[0], ae[1] - 1, ae[2]);
+    var unixDb = db.getTime();
+    var unixDe = de.getTime();
+    for (var k = unixDb; k <= unixDe;) {
+        // arr.push((new Date(parseInt(k))).format());
+        arr.push((DateSelf.formatter(parseInt(k))))
+        k = k + 24 * 60 * 60 * 1000;
+    }
+    return arr;
+  }
+}
+DateSelf.formatter=function(time){
+  var s = '';
+  const k =  new Date(time)
+  var mouth = (k.getMonth() + 1)>=10?(k.getMonth() + 1):('0'+(k.getMonth() + 1));
+  var day = k.getDate()>=10?k.getDate():('0'+k.getDate());
+  s += k.getFullYear() + '-'; // 获取年份。
+  s += mouth + "-"; // 获取月份。
+  s += day; // 获取日。
+  return (s); // 返回日期。
+}
+```
 
 
