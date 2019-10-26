@@ -150,9 +150,69 @@ const deepClone=function(obj){
     }
     return cloneObj;
 }
+function deepCopy(original) {
+  if (Array.isArray(original)) {
+    return original.map(elem => deepCopy(elem));
+  } else if (typeof original === 'object' && original !== null) {
+    return Object.fromEntries(
+      Object.entries(original)
+        .map(([k, v]) => [k, deepCopy(v)]));
+  } else {
+    // Primitive value: atomic, no need to copy
+    return original;
+  }
+}
 
 ```
+### 深层更新
+```
+function deepUpdate(original, keys, value) {
+  if (keys.length === 0) {
+    return value;
+  }
+  const currentKey = keys[0];
+  if (Array.isArray(original)) {
+    return original.map(
+      (v, index) => index === currentKey
+        ? deepUpdate(v, keys.slice(1), value) // (A)
+        : v); // (B)
+  } else if (typeof original === 'object' && original !== null) {
+    return Object.fromEntries(
+      Object.entries(original).map(
+        (keyValuePair) => {
+          const [k,v] = keyValuePair;
+          if (k === currentKey) {
+            return [k, deepUpdate(v, keys.slice(1), value)]; // (C)
+          } else {
+            return keyValuePair; // (D)
+          }
+        }));
+  } else {
+    // Primitive value
+    return original;
+  }
+}
 
+```
+### 深层冻结
+```
+function deepFreeze(value) {
+  if (Array.isArray(value)) {
+    for (const element of value) {
+      deepFreeze(element);
+    }
+    Object.freeze(value);
+  } else if (typeof value === 'object' && value !== null) {
+    for (const v of Object.values(value)) {
+      deepFreeze(v);
+    }
+    Object.freeze(value);
+  } else {
+    // Nothing to do: primitive values are already immutable
+  } 
+  return value;
+}
+```
 ### 基于现有对象的自定义方法
 
 PS:(不建议直接污染原型链，类型Date.prototype.xxx=function(){}这样的写法)
