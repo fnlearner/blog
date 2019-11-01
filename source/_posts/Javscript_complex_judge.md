@@ -1,8 +1,8 @@
 ---
 title: Javscript复杂判断
 date: 2019-08-07 15:13:17
-tags: Javscript
-categories: Javscript
+tags: JavaScript
+categories: JavaScript
 ---
 
 在公司维护前人代码的时候，经常会遇见一堆的if-else语句

@@ -1,7 +1,9 @@
 ---
 title: 优雅的书写方式
 date: 2019-10-27 17:31:42
-tags:
+tags: JavaScript
+type: tags
+comment: true
 ---
 
 ### 变量声明
@@ -11,7 +13,7 @@ tags:
 let a = 1;
 const b = 2;
 ```
-
+<!-- more -->
 ### 对象属性赋值
 
 ```

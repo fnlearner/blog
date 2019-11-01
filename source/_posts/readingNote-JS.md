@@ -1,8 +1,8 @@
 ---
 title: JavaScript读书笔记
 date: 2019-8-5 10:36:13
-tags: Javascript
-categories: Javscript
+tags: JavaScript
+categories: JavaScript
 ---
 
 ## new运算符的实现

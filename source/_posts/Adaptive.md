@@ -1,8 +1,10 @@
 ---
 title: 自适应布局
 date: 2019-08-07 16:41:14
-tags: css Javscript
-categories: Javscript
+tags: 
+  - css 
+  - JavaScript
+categories: JavaScript
 ---
 
 ## grid

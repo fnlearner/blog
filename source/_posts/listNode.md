@@ -1,8 +1,10 @@
 ---
 title: 链表
 date: 2019-08-13 14:26:56
-tags: Javascript listNode
-categories: Javscript
+tags: 
+  - JavaScript 
+  - listNode
+categories: JavaScript
 ---
 
 链表相比数组而言，链表对数据的插入数据的空间复杂度为o(1)
