@@ -13,6 +13,7 @@ reg.test(str);//true
 reg.test(str);/false
 //第一次执行的时候返回true，第二次返回的是false
 ```
+<!--more -->
 这个问题困扰了我很久，后来查阅了MDN和百度，发现正则表达式如果设置了全局标志g，那么test的执行会更新lastIndex，连续的执行test()方法，后续的执行不会从首位开始，而是会从lastIndex开始，因此第一次执行的时候从首位开始，匹配成功，返回true，这时候lastIndex的值更新成第一次执行匹配时找到的index，第二次执行的时候从lastIndex开始，但是没有匹配结果，所以返回false。
 
 #### layui框架下reload表格时，当表格有滚动条时，表格闪烁

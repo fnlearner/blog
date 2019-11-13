@@ -329,3 +329,84 @@ functin load(image,attributes){
 }
 ```
 
+### 获取类型
+({}).toString.call(obj) 的用法与 Object.prototype.toString.call(obj)一样。这两个返回的格式是[object [class]].
+```
+const toType = (obj) =>{
+   return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase()
+}
+toType({a: 4}); //"object"
+toType([1, 2, 3]); //"array"
+(function() {console.log(toType(arguments))})(); //arguments
+toType(new ReferenceError); //"error"
+toType(new Date); //"date"
+toType(/a-z/); //"regexp"
+toType(Math); //"math"
+toType(JSON); //"json"
+toType(new Number(4)); //"number"
+toType(new String("abc")); //"string"
+toType(new Boolean(true)); //"boolean"
+
+//typeof 也可以判断类型,但是只能获取基本类型，引用类型统一返回object，所以尽量用toType的方法;instanceof也可以,然鹅instanceof是基于原型链判断的，如果继承的话
+  class MyArray extends Array{
+    constructor(){
+      super()
+    }
+  }
+
+  const myArray = new MyArray();
+  console.log(`Array: ${myArray instanceof Array}`);
+  console.log(`MyArray :${myArray instanceof MyArray}`);
+  //这样两个返回的都是true
+
+```
+
+几个内置对象没有构造函数，因此不能用instanceof来判断类型
+```
+Math instanceof Math //TypeError
+```
+一个window可以包含多个iframe框架，意味着包含多个全局上下文，因此意味着每个类型有多个构造器，在这样的环境下，给定的对象类型不能保证是给定的构造函数的实例
+```
+const ifFrame = document.createElement('iframe');
+document.body.appendChild(ifFrame);
+const IFrameArray = window.frames[1].Array; 
+const array = new IFrameArray();
+
+array instanceof IFrameArray //true
+array instanceof Array // false
+```
+由于array的constructor是iframe中的Array,因此即使array 与 此时的window上下文中的Array都是数组范畴，但是instanceof是基于原型链来判断的，array的原型链是并没有指向当前window下的Array,因此array instanceof Array 为 false
+
+之前的toType有个问题,当toType的传参是window,window内置方法以及DOM时，有很长一串的结果返回时
+```
+toType(window);
+//"global" (Chrome) "domwindow" (Safari) "window" (FF/IE9) "object" (IE7/IE8)
+ 
+toType(document);
+//"htmldocument" (Chrome/FF/Safari) "document" (IE9) "object" (IE7/IE8)
+ 
+toType(document.createElement('a'));
+//"htmlanchorelement" (Chrome/FF/Safari/IE) "object" (IE7/IE8)
+ 
+toType(alert);
+//"function" (Chrome/FF/Safari/IE9) "object" (IE7/IE8)
+```
+改进一下toType方法,将这个方法挂载到Object上,但是不要挂载到prototype上，将这个方法写成IIFE+闭包
+```
+Object.toType = (function toType(global) {
+  return function(obj) {
+    if (obj === global) {
+      return "global";
+    }
+    return ({}).toString.call(obj).match(/\s([a-z|A-Z]+)/)[1].toLowerCase();
+  }
+})(this)
+Object.toType(window); //"global" (all browsers)
+Object.toType([1,2,3]); //"array" (all browsers)
+Object.toType(/a-z/); //"regexp" (all browsers)
+Object.toType(JSON); //"json" (all browsers)
+```
+这个方法也不是万能的,如果扔进来一个未知类型,则会抛出异常
+```
+Object.toType(fff)//ReferenceError
+```
