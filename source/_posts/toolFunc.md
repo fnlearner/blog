@@ -410,3 +410,133 @@ Object.toType(JSON); //"json" (all browsers)
 ```
 Object.toType(fff)//ReferenceError
 ```
+玩个好玩的，应该可以用具名组匹配来获取类型
+```
+Object.toType = (function(global){
+    const reg = /(?<type>(?<=\s+?)[A-Za-z]+)/;
+    return function(obj){
+      if(obj === global){
+          return 'global';
+      }
+      const matchObj = reg.exec(Object.prototype.toString.call(obj));
+      const type =  matchObj.groups.type;
+      return type;
+    }
+})(this)
+```
+### takeRightWhile
+
+```
+const takeRightWhile = (arr, func) =>
+  arr.reduceRight((acc, el) => (func(el) ? acc : [el, ...acc]), []);
+```
+用法
+```
+takeRightWhile([1, 2, 3, 4], n => n < 3); // [3, 4]
+```
+
+### zip
+
+```
+const zip = (...arrays) => {
+  const maxLength = Math.max(...arrays.map(x => x.length));
+  return Array.from({ length: maxLength }).map((_, i) => {
+    return Array.from({ length: arrays.length }, (_, k) => arrays[k][i]);
+  });
+};
+```
+用法
+```
+zip(['a', 'b'], [1, 2], [true, false]); // [['a', 1, true], ['b', 2, false]]
+zip(['a'], [1, 2], [true, false]); // [['a', 1, true], [undefined, 2, false]]
+```
+
+### 聚合函数
+
+```
+//单个参数
+const pipe = (...fns) => x => {
+    return fns.reduceRight((v,fn)=>{
+       return fn(v);
+    },x)
+}
+```
+用法
+
+```
+const square = v => v+1;
+const double = v => v+2;
+const addOne = v => v+3;
+
+const res = pipe(square,double,addOne);
+res(3)//9
+```
+
+### elementIsVisibleInViewport
+
+```
+const elementIsVisibleInViewport = (el, partiallyVisible = false) => {
+  const { top, left, bottom, right } = el.getBoundingClientRect();
+  const { innerHeight, innerWidth } = window;
+  return partiallyVisible
+    ? ((top > 0 && top < innerHeight) || (bottom > 0 && bottom < innerHeight)) &&
+        ((left > 0 && left < innerWidth) || (right > 0 && right < innerWidth))
+    : top >= 0 && left >= 0 && bottom <= innerHeight && right <= innerWidth;
+};
+```
+用法
+```
+elementIsVisibleInViewport(el); // false - (not fully visible)
+elementIsVisibleInViewport(el, true); // true - (partially visible)
+```
+
+### 聚合函数(2)
+
+```
+//第一个函数允许多个参数，剩余函数仅允许一个参数
+const composeRight = (...fns) => fns.reduce((f,g)=>(...args)=>g(f(...args)));
+```
+用法
+```
+const add =(x,y) => x+y;
+const square = x => x**2;
+const addAndSquare = composeRight(add,square);
+```
+
+### uniqueSymmetricDifference
+
+```
+const uniqueSymmetricDifference = (a, b) => [
+  ...new Set([...a.filter(v => !b.includes(v)), ...b.filter(v => !a.includes(v))])
+];
+```
+用法
+```
+uniqueSymmetricDifference([1, 2, 3], [1, 2, 4]); // [3, 4]
+```
+
+### 获取长度
+```
+const size = val =>
+    Array.isArray(val)
+        ? val.length
+        : val && typeof val === 'object'
+        ? val.size || val.length || Object.keys(val).length
+        : typeof val === 'string'
+            ? new Blob([val]).size
+            : 0;
+```
+
+
+### initialArrayWithRangeRight
+```
+const initialArrayWithRangeRight = (end,start = 0, step = 1) => {
+    return Array.from({length:Math.ceil(end-start+1)/step}).map((v,i,arr)=>{
+        return (arr.length-i-1)*step+start;
+    });
+}
+```
+用法
+```
+initialArrayWithRangeRight(5)// [5,4,3,2,1,0]
+```

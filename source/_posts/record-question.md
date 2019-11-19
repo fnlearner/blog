@@ -55,3 +55,44 @@ const handler = ()=>{
 $('#copy').on('click',handler);
 ```
 
+### 短路检测
+
+```
+const value = number || '';
+// number -> 0  value => ''
+```
+当number转为bool时的值为true时，value= number，当number转为bool时的值为false时，value= number; 这句代码的目的其实是当number为有值时显示值，异常值如undefined,NaN,null的时候显示空，但是好巧不巧，当number 为0的情况下时，转为bool值时值是false，这样value会被置空，
+```
+const value = Number.isNaN(parseInt(number))?number:'';
+```
+![图片](/images/record_question/screen1.png)
+undefined,null,NaN在parseInt的转化下都成了NaN，这里不考虑Object
+
+
+### 模板复用
+
+因为公司用layui做开发，然后表格渲染的时候总会需要用到templet的情况，然后其实很多模板格式都是一样的，但是由于属性名字的不一致，就导致需要写很多款式一模一样的templet，就很崩溃, 然后今天搞了个复用的写法.
+```
+const showTemplet(name){
+  //name是传递进来的具体的值
+  return function(data){
+    //data是table组件模板传递的table需要渲染的每一行数据
+    return  `<span>${data[name]}</span>`
+  }
+}
+//table render
+const item = [
+  {
+    field:'idx',
+    width:80
+  }
+]
+item.map(_item=>{
+    return {
+      field:_item.field,
+      title:'',
+      width:item.width,
+      templet:showTemplet.call(null,item.field)
+    }
+})
+```
