@@ -8,15 +8,18 @@ categories: tool
 ### 防抖
 ```
 function debounce(func, wait) {
-    let timeout;
+    let timeout = null;
     return function () {
         let context = this;
         let args = arguments;
 
-        if (timeout) clearTimeout(timeout);
+        if (timeout) {
+          clearTimeout(timeout);
+          timeout = null;
+        };
         
         timeout = setTimeout(() => {
-            func.apply(context, args)
+            func.apply(context, args);
         }, wait);
     }
 }
@@ -555,4 +558,44 @@ const hashBrowser = val =>
 用法
 ```
 hashBrowser(JSON.stringify({ a: 'a', b: [1, 2, 3, 4], foo: { c: 'bar' } })).then(console.log); // '04aa106279f5977f59f9067fa9712afc4aedc6f5862a8defc34552d8c7206393'
+```
+
+
+### 自定义事件
+
+```
+const triggerEvnet = (el,eventType,detail) => el.dispatchEvent(new CustomEvent(eventType,detail));
+```
+用法
+```
+triggerEvnet(document.getElementById('id'),'click');//触发前需要先注册方法，addEventListener或者attachEvent
+```
+
+### isWritableStream
+检查给定参数是否是可写的流体
+```
+const isWriteable = val => val !== null &&
+  typeof val === 'object' &&
+  typeof val.pipe === 'function' &&
+  typeof val._write === 'function' &&
+  typeof val._writableState === 'object';
+```
+Node环境中使用
+```
+const fs = require('fs');
+isWritableStream(fs.createWriteStream('test.txt')); // true
+```
+
+### 打乱数组顺序
+
+洗牌算法
+```
+const shuffle = (arr) => {
+  let m = arr.length;
+  while(m){
+    const i = Math.floor(Math.random()*m--);
+    [arr[i],arr[m]] =[arr[m],arr[i]]; 
+  }
+  return arr;
+}
 ```
