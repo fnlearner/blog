@@ -1,7 +1,7 @@
 ---
 title: jsonp实现
 date: 2019-11-28 14:04:32
-tags:
+tags: Thinking JavaScript
 ---
 由于浏览器的同源策略，所以当不同源发送请求时，会发生跨域，请求返回的结果被浏览器所拦截，其中一个解决办法就是用jsonp,jquery中的ajax中就支持了jsonp的数据类型
 ```
@@ -11,6 +11,7 @@ $.ajax({
  success: function onSuccess() { }
 });
 ```
+<!--more -->
 ### 什么是jsonp？
 
 jsonp就是我们开发人员利用了script标签的特性来绕过了浏览器的同源策略，因为script加载资源的时候不受浏览器同源策略的影响，但是这个策略（同源策略）不允许读取与当前网站不同源的回复，只允许发送请求，不允许读取请求
