@@ -784,3 +784,50 @@ export const mapState = normalizeNamespace((namespace, states) => {
 ```
 看了下剩下的几个map，逻辑都一样，就是return都时候做下修改就好，那就这样啦
 Done！
+
+
+------- 更新 2020.6.26
+害 ，发现vuex更新到vuex4了，然后我看了一下，有个东西改了，人家不用mixin来注入store这东西了哈，人家用provide和inject来注入store了
+[代码](https://github.com/vuejs/vuex/blob/4.0/src/store.js)
+#### 看下简单的示例代码
+```bash
+import { createApp } from 'vue'
+import Counter from './Counter.vue'
+import store from './store'
+
+const app = createApp(Counter)
+console.log('app is created')
+app.use(store)
+console.log('store is used')
+app.mount('#app')
+```
+在调用app.use方法的时候用调用注入plugin的install方法
+（如果install方法存在的话），看下use方法怎么写的
+```bash
+       use(plugin, ...options) {
+                if (installedPlugins.has(plugin)) {
+                    (process.env.NODE_ENV !== 'production') && warn(`Plugin has already been applied to target app.`);
+                }
+                else if (plugin && isFunction(plugin.install)) {
+                    installedPlugins.add(plugin);
+                    plugin.install(app, ...options);
+                }
+                else if (isFunction(plugin)) {
+                    installedPlugins.add(plugin);
+                    plugin(app, ...options);
+                }
+                else if ((process.env.NODE_ENV !== 'production')) {
+                    warn(`A plugin must either be a function or an object with an "install" ` +
+                        `function.`);
+                }
+                return app;
+            },
+```
+然后看下vuex中的install方法怎么写的
+```bash
+install (app, injectKey) {
+    app.provide(injectKey || storeKey, this)
+    app.config.globalProperties.$store = this
+}
+```
+很明显得看出是把store放到provide中实行了，并且因为在调用的时候是用的`plugin.install(app)`的方法来写的，所以这个时候的this指向的是store实例，这样就可以把store实例注入到app实例中了 ，这样写的好处我觉得就是数据来源更清晰了吧。
