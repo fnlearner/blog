@@ -32,6 +32,7 @@ export function provide<T>(key: InjectionKey<T> | string, value: T) {
   }
 }
 ```
+<!-- more -->
 有点纳闷为啥parentProvides === provides 的时候就可以判断当前的实例调用了provide，然后我用尤大的那个vite写了个demo，父元素调用provide，子元素也调用provide
 <br>App.vue
 ```bash
