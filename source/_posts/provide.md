@@ -2,6 +2,7 @@
 title: provide of vue3
 date: 2020-06-28 14:33:54
 tags: Vue JavaScript
+type: Vue JavaScrip
 ---
 
 ### 前言

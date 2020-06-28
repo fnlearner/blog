@@ -2,7 +2,7 @@
 title: leetcode第70之爬楼梯
 date: 2019-08-08 17:03:42
 tags: leetcode
-categories: leetcode
+type: leetcode
 ---
 
 描述：假设你正在爬楼梯。需要 n 阶你才能到达楼顶。
