@@ -11,7 +11,7 @@ categories: leetcode
 
 判断你是否能够到达最后一个位置
 <!-- more -->
-```
+```bash
 /**
  * @param {number[]} nums
  * @return {boolean}

@@ -11,7 +11,7 @@ categories: leetcode
 如果给定字符串 S 有效，则返回 true；否则，返回 false
 <!-- more -->
 
-```
+```bash
 /**
  * @param {string} S
  * @return {boolean}
