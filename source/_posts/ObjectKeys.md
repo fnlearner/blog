@@ -130,5 +130,13 @@ Object.keys(me).forEach((key) => {
   console.log(me[key])
 })
 ```
-[结果](/images/ObjectKeys/code.png)
+</br>
+<div style="overflow:hidden">
+    <img src="/images/ObjectKeys/code.png" style="float:left;" 
+    title="Codes" alt="picture"/>
+</div>
+
+
+
+
 
