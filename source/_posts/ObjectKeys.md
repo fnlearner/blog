@@ -130,4 +130,5 @@ Object.keys(me).forEach((key) => {
   console.log(me[key])
 })
 ```
+[结果](/images/ObjectKeys/code.png)
 
