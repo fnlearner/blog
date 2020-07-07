@@ -19,6 +19,7 @@ Object.keys(obj).forEach(key=>{
 })
 
 ```
+<!-- more -->
 
 试试ts版的
 ```bash
