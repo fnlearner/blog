@@ -28,6 +28,7 @@ import {
 ## 然后是ref，是为了给primitive类型的value做reactive
 import { UnwrapRef, Ref } from './ref'
 ```
+<!-- more -->
 然后是常量定义
 ```bash
 ## 枚举类型
