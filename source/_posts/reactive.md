@@ -10,6 +10,10 @@ categories: TypeScript Vue3
 vue3出了beta，了解一下响应式数据的实现
 
 ### 正题
+
+**reactive**
+</br>
+</br>
 下面这些是在reactive中导入的外部文件
 ```bash
 import { isObject, toRawType, def, hasOwn, makeMap } from '@vue/shared'##这些都是通用方法
@@ -64,7 +68,7 @@ const collectionTypes = new Set<Function>([Set, Map, WeakMap, WeakSet])
  # \/\*#\_\_PURE\_\_\*\/
  # So that rollup can tree-shake them if necessary.
  #
- # 这个方法是干嘛用的注释写的很清楚了，很显然这是一个闭包，返回的函数是用来判断# key是否存在map中
+ # 这个方法是干嘛用的注释写的很清楚了，很显然这是一个闭包，返回的函数是用来判断# key是否存在map中,在调用方法时要在前片加例子中的pure 让rollup能够tree-shake
 export function makeMap(
   str: string,
   expectsLowerCase?: boolean
@@ -200,7 +204,7 @@ Map.prototype.set.call(proxy, 1, 1);
 ```
 所以这段代码`Map.prototype.set.call(proxy, 1, 1);`为什么这个报错，就是这个问题的核心
 
-那首先，Map这个呢把数据储存在自己的私有内部插槽中，类型[MapData]这样，然后这个插槽是跟Map对象自身绑定的。而Proxy不能完全模仿这样的行为，巧的是，这样的插槽Proxy学不来
+那首先，Map这个呢把数据储存在自己的私有内部插槽中，类型[MapData]这样，然后这个插槽是跟Map对象自身绑定的。而Proxy不能完全模仿这样的行为，巧的是，这样的插槽Proxy学不来，所以在给它们做代理的时候把调用的实例重新指向Map这类结构的实例再进行调用实例方法就行
 ```bash
 const PRIVATE = new WeakMap();
 const obj = {};
@@ -229,6 +233,7 @@ export function isReadonly(value: unknown): boolean {
 export function isProxy(value: unknown): boolean {
   return isReactive(value) || isReadonly(value)
 }
+# 获取原始数据
 export function toRaw<T>(observed: T): T {
   return (
     (observed && toRaw((observed as Target)[ReactiveFlags.RAW])) || observed
@@ -304,6 +309,223 @@ export function shallowReadonly<T extends object>(
     shallowReadonlyHandlers,
     readonlyCollectionHandlers
   )
+}
+```
+
+**baseHandler**
+</br>
+</br>
+导入方法
+```bash
+import { reactive, readonly, toRaw, ReactiveFlags } from './reactive'
+import { TrackOpTypes, TriggerOpTypes } from './operations'
+import { track, trigger, ITERATE_KEY } from './effect'
+import {
+  isObject,
+  hasOwn,
+  isSymbol,
+  hasChanged,
+  isArray,
+  extend
+} from '@vue/shared'
+import { isRef } from './ref'
+```
+获取Symbol的属性名
+```bash
+const builtInSymbols = new Set(
+  Object.getOwnPropertyNames(Symbol)
+    .map(key => (Symbol as any)[key])
+    .filter(isSymbol)
+)
+```
+看名字就知道干嘛的
+```bash
+const get = /*#__PURE__*/ createGetter()
+const shallowGet = /*#__PURE__*/ createGetter(false, true)
+const readonlyGet = /*#__PURE__*/ createGetter(true)
+const shallowReadonlyGet = /*#__PURE__*/ createGetter(true, true)
+```
+
+对数组的这三个方法插桩，看的时候有个问题，为什么有个条件分支是`res === -1 || res === false`的时候继续执行，什么情况下会进入这个分支？
+```bash
+const arrayInstrumentations: Record<string, Function> = {}
+;['includes', 'indexOf', 'lastIndexOf'].forEach(key => {
+  arrayInstrumentations[key] = function(...args: any[]): any {
+    const arr = toRaw(this) as any
+    for (let i = 0, l = (this as any).length; i < l; i++) {
+      track(arr, TrackOpTypes.GET, i + '')
+    }
+    ## we run the method using the original args first (which may be reactive)
+    ## console.log(key,...args)
+    const res = arr[key](...args)
+    if (res === -1 || res === false) {
+      ## if that didn't work, run it again using raw values.
+      return arr[key](...args.map(toRaw))
+    } else {
+      return res
+    }
+    ## return res
+  }
+})
+```
+把if的条件分支注释，只留下`return res`这个分支，然后跑单测，发现reactiveArray.spec.ts这个测试文件的测试用例` × Array identity methods should work with raw values (16 ms)`测试不通过。发现是在这里的时候不能测试通过
+```bash
+const raw = {}
+const arr = reactive([{}, {}])
+arr.push(raw)
+## 省略其他代码
+# should work also for the observed version
+const observed = arr[2]
+expect(arr.indexOf(observed)).toBe(2)
+```
+然后将测试不通过代码拷贝到vite的app中进行调试，发现是observed这个值不再是跟raw一样的{},猜测是劫持了数组的get方法并且对返回值进行了修改。然后进入到`createGetter`这个方法，其中有个逻辑,如果参数是对象，那么就要转成响应式对象。
+```bash
+if (isObject(res)) {
+    # Convert returned value into a proxy as well. we do the isObject check
+    # here to avoid invalid value warning. Also need to lazy access readonly
+    # and reactive here to avoid circular dependency.
+    return isReadonly ? readonly(res) : reactive(res);
+}
+```
+很显然，`typeof {} === 'object'`，所以这个时候的observed不再是单纯的`{}`，它是一个响应式的`{}`，所以就能解释为什么在`res === -1 || res === false`的时候还要进行次函数执行的过程，这是为了防止获取到的值是经过转换的值，所以在分支里面的参数要对参数进行一次还原，SKR。
+
+
+下面这个就是劫持了get的方法，一条条逻辑看
+```bash
+function createGetter(isReadonly = false, shallow = false) {
+  return function get(target: object, key: string | symbol, receiver: object) {
+    if (key === ReactiveFlags.IS_REACTIVE) {
+      return !isReadonly
+    } else if (key === ReactiveFlags.IS_READONLY) {
+      return isReadonly
+    } else if (
+      key === ReactiveFlags.RAW &&
+      receiver ===
+        (isReadonly
+          ? (target as any)[ReactiveFlags.READONLY]
+          : (target as any)[ReactiveFlags.REACTIVE])
+    ) {
+      return target
+    }
+
+    const targetIsArray = isArray(target)
+    if (targetIsArray && hasOwn(arrayInstrumentations, key)) {
+      return Reflect.get(arrayInstrumentations, key, receiver)
+    }
+
+    const res = Reflect.get(target, key, receiver)
+
+    if (
+      isSymbol(key)
+        ? builtInSymbols.has(key)
+        : key === `__proto__` || key === `__v_isRef`
+    ) {
+      return res
+    }
+
+    if (!isReadonly) {
+      track(target, TrackOpTypes.GET, key)
+    }
+
+    if (shallow) {
+      return res
+    }
+
+    if (isRef(res)) {
+      # ref unwrapping, only for Objects, not for Arrays
+      # 对于ref的解套，仅仅针对object，不针对数组.
+      return targetIsArray ? res : res.value
+    }
+
+    if (isObject(res)) {
+      # Convert returned value into a proxy as well. we do the isObject check
+      # here to avoid invalid value warning. Also need to lazy access readonly
+      # and reactive here to avoid circular dependency.
+      return isReadonly ? readonly(res) : reactive(res)
+    }
+
+    return res
+  }
+}
+```
+先看这个,老样子，先注释，跑单测，看结果
+```bash
+if (key === ReactiveFlags.IS_REACTIVE) {
+      return !isReadonly
+}
+```
+结果:
+![code3](/images/reactive/code3.png)
+可以看到是`reactivity/reactive/Array › should make Array reactive`这个测试用例中的某个用例出现了问题，来看具体问题代码
+```bash
+    const observed = reactive(original)
+    expect(observed).not.toBe(original)
+    # 下面这段是问题代码
+    expect(isReactive(observed)).toBe(true)
+```
+看`isReactive`方法
+```bash
+export function isReactive(value: unknown): boolean {
+  if (isReadonly(value)) {
+    return isReactive((value as Target)[ReactiveFlags.RAW])
+  }
+  return !!(value && (value as Target)[ReactiveFlags.IS_REACTIVE])
+}
+```
+那现在可以看出，是在数组访问`ReactiveFlags.IS_REACTIVE`这个key的时候被劫持了，然后进
+```
+if (key === ReactiveFlags.IS_REACTIVE) {
+      return !isReadonly
+}
+```
+这个逻辑，至于为什么返回结果要对`isReadonly`取反，很显然，在`createReactiveObject`的时候reactive 和 readonly是互斥的关系，那么一个对象不是只读很显然就是响应式,那如果是原始对象呢？很显然，原始对象没有`__v_isReactive`这个属性，那么会返回undefined，用!!转义就是false；然后`key === ReactiveFlags.IS_READONLY`这个分支的逻辑就跟`REACTIVE`的逻辑一样的。
+
+然后我把第三个分支给注释，WDM，直接爆栈了。。。
+</br>
+` RangeError: Maximum call stack size exceeded
+        at Object.get (<anonymous>)`
+四个测试用例没通过，我选了其中一个测试用例来复现`Array identity methods should work with raw values`
+```bash
+    const raw = {}
+    const arr = reactive([{}, {}])
+    arr.push(raw)
+   console.log(arr.indexOf(raw))
+```
+然后跟着代码走，先进入indexOf的这个方法，这个方法是被劫持的,走到这里
+
+```bash
+['includes', 'indexOf', 'lastIndexOf'].forEach(key => {
+    arrayInstrumentations[key] = function (...args) {
+        # 1 这里需要获取当前数组的原始数据,然后会在this中访问__v_raw属性，接着就进入劫持的get方法
+        const arr = toRaw(this);
+        for (let i = 0, l = this.length; i < l; i++) {
+            track(arr, "get" /* GET */, i + '');
+        }
+        # we run the method using the original args first (which may be reactive)
+        # 2
+        const res = arr[key](...args);
+        if (res === -1 || res === false) {
+            # if that didn't work, run it again using raw values.
+            return arr[key](...args.map(toRaw));
+        }
+        else {
+            return res;
+        }
+    };
+});
+
+# 当1执行的时候，跳到get的时候此时的key是__v_raw
+# 这里截取get方法的一部分，第三个分支被我删去，此时不会直接return，而是继续往下执行，此时
+# 的return res是undefined，因此此时的arr并不是原始数据，当执行到2处时，又一次进入get方# 法，此时的key是indexOf，然后此时会返回 return Reflect.get(arrayInstrumentations, # key, receiver);而arrayInstrumentations['indexOf']这个方法又进入了1这个过程，从而造# 成调用栈爆栈的问题
+if (key === "__v_isReactive" /* IS_REACTIVE */) {
+        return !isReadonly;
+    }
+    else if (key === "__v_isReadonly" /* IS_READONLY */) {
+        return isReadonly;
+    }
+    const targetIsArray = isArray(target);
+    if (targetIsArray && hasOwn(arrayInstrumentations, key)) {
+        return Reflect.get(arrayInstrumentations, key, receiver);
 }
 ```
 OVER
