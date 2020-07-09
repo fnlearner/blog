@@ -47,8 +47,17 @@ interface ObjectConstructor {
 
 来回到之前的问题，为什么会报错？
 
-string类型是 我们从Person接口中实际获取到的key的超集，具体的key应该是name|age|id,这些同样是ts允许我们从Person从获取索引的一组值，对于其他的字符串来说,ts认为它们也可以获取索引，但是获取的索引值是any类型的，在严格模式中，any类型是不被允许的，除非有明确的声明.
+在Person中，具体的key值分别是name|age|id，但是它们的索引签名并不是string类型，所以当在keys方法中返回的string数组的每一个key都是string类型时，跟Person中的每个key的索引签名并不匹配，所以是不能通过string类型的key访问到me中的数据，
+如果Person这样定义:
+```bash
+interface Person{
+    [key:string]:string
+}
 
+```
+如果这样写，那么之前的forEach语句就可以正常执行不报错，而且循环中的每个item的类型推导是string类型
+![code](/images/ObjectKeys/code2.png)
+</br>
 **注意**：那么这个就很有可能是报错的原因。更具体的类型在已经建立索引的库中引发的问题，或者是因为类型过于复杂导致类型不能正确推导
 
 那么遇到这个问题该怎么解决？
