@@ -1,8 +1,12 @@
 ---
 title: reactive
 date: 2020-07-09 11:23:04
-tags: TypeScript Vue3
-categories: TypeScript Vue3
+tags: 
+    - TypeScript  
+    - Vue3
+categories: 
+    - TypeScript 
+    - Vue3
 ---
 
 ### 前言

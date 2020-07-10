@@ -1,7 +1,8 @@
 ---
 title: jsonp实现
 date: 2019-11-28 14:04:32
-tags: Thinking JavaScript
+tags: 
+    - JavaScript
 ---
 由于浏览器的同源策略，所以当不同源发送请求时，会发生跨域，请求返回的结果被浏览器所拦截，其中一个解决办法就是用jsonp,jquery中的ajax中就支持了jsonp的数据类型
 ```

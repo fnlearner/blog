@@ -1,8 +1,12 @@
 ---
 title: provide of vue3
 date: 2020-06-28 14:33:54
-tags: Vue JavaScript
-type: Vue JavaScrip
+tags: 
+    - Vue 
+    - JavaScript
+categories: 
+    - Vue 
+    - JavaScript
 ---
 
 ### 前言
@@ -18,17 +22,17 @@ export function provide<T>(key: InjectionKey<T> | string, value: T) {
     }
   } else {
     let provides = currentInstance.provides
-    // by default an instance inherits its parent's provides object
-    // but when it needs to provide values of its own, it creates its
-    // own provides object using parent provides object as prototype.
-    // this way in `inject` we can simply look up injections from direct
-    // parent and let the prototype chain do the work.
+    # by default an instance inherits its parent's provides object
+    # but when it needs to provide values of its own, it creates its
+    # own provides object using parent provides object as prototype.
+    # this way in `inject` we can simply look up injections from direct
+    # parent and let the prototype chain do the work.
     const parentProvides =
       currentInstance.parent && currentInstance.parent.provides
     if (parentProvides === provides) {
       provides = currentInstance.provides = Object.create(parentProvides)
     }
-    // TS doesn't allow symbol as index type
+    # TS doesn't allow symbol as index type
     provides[key as string] = value
   }
 }

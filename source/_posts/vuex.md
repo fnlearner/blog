@@ -1,7 +1,8 @@
 ---
 title: vuex
 date: 2020-04-28 14:06:42
-tags:
+tags: Vue
+categories: Vue
 ---
 
 ## vuex 简述
