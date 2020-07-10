@@ -528,4 +528,298 @@ if (key === "__v_isReactive" /* IS_REACTIVE */) {
         return Reflect.get(arrayInstrumentations, key, receiver);
 }
 ```
+
+有一个Symbol的判断逻辑一直没有理解，我TM
+```bash
+  if (
+      isSymbol(key)
+        ? builtInSymbols.has(key)
+        : key === `__proto__` || key === `__v_isRef`
+    ) {
+      return res
+    }
+```
+我在单测里面执行测试用例的自定义Symbol访问
+```bash
+    const customSymbol = Symbol()
+    const obj = {
+      [Symbol.asyncIterator]: { a: 1 },
+      [Symbol.unscopables]: { b: '1' },
+      [customSymbol]: { c: [1, 2, 3] }
+    }
+
+    const objRef = ref(obj)
+    expect(objRef.value[Symbol.asyncIterator]).toBe(obj[Symbol.asyncIterator])
+    expect(objRef.value[Symbol.unscopables]).toBe(obj[Symbol.unscopables])
+    # 这两句log语句都是输出 { c: [ 1, 2, 3 ] }原始数据
+    console.log(objRef.value[customSymbol])
+    console.log(obj[customSymbol])
+```
+然后我在demo里面也复制了这段代码
+```bash
+    const customSymbol = Symbol()
+    const obj = {
+      [Symbol.asyncIterator]: { a: 1 },
+      [Symbol.unscopables]: { b: '1' },
+      [customSymbol]: { c: [1, 2, 3] }
+    }
+
+    debugger
+    const objRef = ref(obj)
+    # 结果下面两个log 一个输出 代理过的Object，一个输出Objectt原始数据
+    console.log(objRef.value[customSymbol])
+    console.log(obj[customSymbol])
+```
+我就先不管它了。
+
+然后是`createSetter`,是set方法的插桩
+```bash
+function createSetter(shallow = false) {
+  return function set(
+    target: object,
+    key: string | symbol,
+    value: unknown,
+    receiver: object
+  ): boolean {
+    const oldValue = (target as any)[key]
+    if (!shallow) {
+      value = toRaw(value)
+      # 这里就是判断赋值的时候新值如果不是ref，并且旧值是ref的情况下的赋值
+      # 这里有个条件是判断当前target是非数组，但是当我把这个条件删除的时候，210个测试用例仍然测试通过，所以这个条件不知道是干啥的。 
+      if (!isArray(target) && isRef(oldValue) && !isRef(value)) {
+        oldValue.value = value
+        return true
+      }
+    } else {
+      # in shallow mode, objects are set as-is regardless of reactive or not
+    }
+
+    const hadKey = hasOwn(target, key)
+    const result = Reflect.set(target, key, value, receiver)
+    # don't trigger if target is something up in the prototype chain of original
+    # 这个等于是在什么情况下发生的，把里面的逻辑拿出来，找到没有通过的测试用例，发现就一个，是在effect模块，emm先记录，等读到的时候再看---effect-settter
+    if (target === toRaw(receiver)) {
+      # 这里就是判断要set的key是否存在target上，如果不存在，就触发添加数据的依赖，如果存在，就触发更新数据的依赖
+      if (!hadKey) {
+        trigger(target, TriggerOpTypes.ADD, key, value)
+      } else if (hasChanged(value, oldValue)) {
+        trigger(target, TriggerOpTypes.SET, key, value, oldValue)
+      }
+    }
+    # Reflect要返回boolean来判断是否设置成功
+    return result
+  }
+}
+# hasChange方法用来判断值是否有所改变，&&后面的判断语句是用来过滤NaN的，因为NaN是唯一一个自身不相等的数
+export const hasChanged = (value: any, oldValue: any): boolean =>
+  value !== oldValue && (value === value || oldValue === oldValue)
+```
+附一张疑问图
+![confused](/images/reactive/code5.png)
+![confused](/images/reactive/code6.png)
+剩下几个的逻辑就很单一了。
+```bash
+# 删除逻辑 删除成功并且在target有这个key存在然后触发更新
+function deleteProperty(target: object, key: string | symbol): boolean {
+  const hadKey = hasOwn(target, key)
+  const oldValue = (target as any)[key]
+  const result = Reflect.deleteProperty(target, key)
+  if (result && hadKey) {
+    trigger(target, TriggerOpTypes.DELETE, key, undefined, oldValue)
+  }
+  return result
+}
+# 静态方法 Reflect.has() 作用与 in 操作符 相同。
+function has(target: object, key: string | symbol): boolean {
+  const result = Reflect.has(target, key)
+  track(target, TrackOpTypes.HAS, key)
+  return result
+}
+# Reflect.ownKeys() 返回一个由目标对象自身的属性键组成的数组。不包括原型链喔
+function ownKeys(target: object): (string | number | symbol)[] {
+  track(target, TrackOpTypes.ITERATE, ITERATE_KEY)
+  return Reflect.ownKeys(target)
+}
+```
+然后在baseHandlers剩下的代码就是一些handler了，没有逻辑
+
+
+**collectionHandler**
+导入文件，类型声明，以及一些方法
+```bash
+import { toRaw, reactive, readonly, ReactiveFlags } from './reactive'
+import { track, trigger, ITERATE_KEY, MAP_KEY_ITERATE_KEY } from './effect'
+import { TrackOpTypes, TriggerOpTypes } from './operations'
+import {
+  isObject,
+  capitalize,
+  hasOwn,
+  hasChanged,
+  toRawType
+} from '@vue/shared'
+
+export type CollectionTypes = IterableCollections | WeakCollections
+
+type IterableCollections = Map<any, any> | Set<any>
+type WeakCollections = WeakMap<any, any> | WeakSet<any>
+type MapTypes = Map<any, any> | WeakMap<any, any>
+type SetTypes = Set<any> | WeakSet<any>
+
+const toReactive = <T extends unknown>(value: T): T =>
+  isObject(value) ? reactive(value) : value
+
+const toReadonly = <T extends unknown>(value: T): T =>
+  isObject(value) ? readonly(value) : value
+
+const toShallow = <T extends unknown>(value: T): T => value
+
+const getProto = <T extends CollectionTypes>(v: T): any =>
+  Reflect.getPrototypeOf(v)
+
+``` 
+看get方法
+```bash
+function get(
+  target: MapTypes,
+  key: unknown,
+  wrap: typeof toReactive | typeof toReadonly | typeof toShallow
+) {
+  target = toRaw(target)
+  const rawKey = toRaw(key)
+  # 这里的key不等于rawKey的话那么必然是这个key是响应式对象
+  # 然后这里track应该是收集依赖，具体逻辑不知道，先这样看
+  if (key !== rawKey) {
+    track(target, TrackOpTypes.GET, key)
+  }
+  track(target, TrackOpTypes.GET, rawKey)
+  const { has, get } = getProto(target)
+  # 判断是key在target上还是rawKey在target上，wrap是属于toReactive|toReadonly|toShallow三个函数中的其中一个，if里面是在组合调用函数
+  if (has.call(target, key)) {
+    return wrap(get.call(target, key))
+  } else if (has.call(target, rawKey)) {
+    return wrap(get.call(target, rawKey))
+  }
+```
+
+啊，然后看set方法 
+```bash
+function set(this: MapTypes, key: unknown, value: unknown) {
+  value = toRaw(value)
+  # 这里肯定要把this转成原生数据类型，而不能用Proxy，原因之前有讲了，这里的has调用绑定到了代理之前的数据实例
+  const target = toRaw(this)
+  const { has, get, set } = getProto(target)
+
+  let hadKey = has.call(target, key)
+  ## 这个是我自己改的，果然 ，测试用例没通过，调了下，果然还是得用实例自带的方法来判断，用Object.prototype.hasOwnProperty还是不能用来对Map这类结构进行判断的
+  ## let hadKey = hasOwn(target,key as any)
+  if (!hadKey) {
+    # 这个逻辑跟之前的对数组的indexOf插桩的方法一个道理，都是考虑了key值为响应式对象的情况
+    key = toRaw(key)
+    hadKey = has.call(target, key)
+  } else if (__DEV__) {
+    checkIdentityKeys(target, has, key)
+  }
+
+  const oldValue = get.call(target, key)
+  const result = set.call(target, key, value)
+  # 更新依赖---->要么add要么set
+  if (!hadKey) {
+    trigger(target, TriggerOpTypes.ADD, key, value)
+  } else if (hasChanged(value, oldValue)) {
+    trigger(target, TriggerOpTypes.SET, key, value, oldValue)
+  }
+  return result
+}
+```
+has 和 add方法
+```bash
+function has(this: CollectionTypes, key: unknown): boolean {
+  const target = toRaw(this)
+  const rawKey = toRaw(key)
+  # 响应对象
+  if (key !== rawKey) {
+    track(target, TrackOpTypes.HAS, key)
+  }
+  track(target, TrackOpTypes.HAS, rawKey)
+  const has = getProto(target).has
+  # 这里用到了或运算符考虑到了Set里面放置了响应式对象的情况
+  # 所以单独只使用一个判断的话测试用例是不能全部通过的
+  return has.call(target, key) || has.call(target, rawKey)
+}
+
+# 这个方法 就 嗯  一目了然 
+function add(this: SetTypes, value: unknown) {
+  # 可能会有疑问，这里的添加不是把value都做了一个转换吗？为什么Set里面会有响应式对象？
+  # 这个方法只是劫持了Set方法的add，所以只有Set转变成响应式对象后调用了add方法，加入进去的value才只是普通的value值
+  value = toRaw(value)
+  const target = toRaw(this)
+  const proto = getProto(target)
+  const hadKey = proto.has.call(target, value)
+  const result = proto.add.call(target, value)
+  if (!hadKey) {
+    trigger(target, TriggerOpTypes.ADD, value, value)
+  }
+  return result
+}
+```
+执行这段代码，在set转为响应式对象前后分别把响应式对象entry加入
+```bash
+const raw = new Set();
+const entry = reactive({});
+raw.add(entry);
+const set = reactive(raw);
+// console.log(set.has(entry));
+set.add(entry)
+```
+看log结果
+![code7](/images/reactive/code7.png)
+
+从图里可以很明显的看出 添加了两个相同的对象，但是一个是原始值，一个是代理对象，说明之前那个问题，Set结构里面是可以有代理对象的，只要在Set被reactive之前加入就行，在被reactive之后添加的数据就只是原始数据，而不是代理对象了，这里的原始数据指的是没有被Proxy
+
+
+deleteEntry 跟set 逻辑有点相似,区别就在于调用的方法不一样
+```bash
+
+function deleteEntry(this: CollectionTypes, key: unknown) {
+  const target = toRaw(this)
+  const { has, get, delete: del } = getProto(target)
+  let hadKey = has.call(target, key)
+  if (!hadKey) {
+    key = toRaw(key)
+    hadKey = has.call(target, key)
+  } else if (__DEV__) {
+    checkIdentityKeys(target, has, key)
+  }
+
+  const oldValue = get ? get.call(target, key) : undefined
+  # forward the operation before queueing reactions
+  const result = del.call(target, key)
+  if (hadKey) {
+    trigger(target, TriggerOpTypes.DELETE, key, undefined, oldValue)
+  }
+  return result
+}
+
+```
+
+clear 方法
+```bash
+function clear(this: IterableCollections) {
+  const target = toRaw(this)
+  const hadItems = target.size !== 0
+  const oldTarget = __DEV__
+    ? target instanceof Map
+      ? new Map(target)
+      : new Set(target)
+    : undefined
+  # forward the operation before queueing reactions
+  const result = getProto(target).clear.call(target)
+  # 告诉有收集这个target的对象们可以把它的值置空了
+  if (hadItems) {
+    trigger(target, TriggerOpTypes.CLEAR, undefined, undefined, oldTarget)
+  }
+  return result
+}
+
+```
 OVER
