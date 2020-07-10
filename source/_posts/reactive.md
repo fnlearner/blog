@@ -8,12 +8,10 @@ categories: TypeScript Vue3
 ### 前言
 
 vue3出了beta，了解一下响应式数据的实现
+### 正文   
 
-### 正题
+#### reactive 
 
-**reactive**
-</br>
-</br>
 下面这些是在reactive中导入的外部文件
 ```bash
 import { isObject, toRawType, def, hasOwn, makeMap } from '@vue/shared'##这些都是通用方法
@@ -312,7 +310,7 @@ export function shallowReadonly<T extends object>(
 }
 ```
 
-**baseHandler**
+#### baseHandler
 </br>
 </br>
 导入方法
@@ -643,8 +641,7 @@ function ownKeys(target: object): (string | number | symbol)[] {
 ```
 然后在baseHandlers剩下的代码就是一些handler了，没有逻辑
 
-
-**collectionHandler**
+#### collectionHandler
 导入文件，类型声明，以及一些方法
 ```bash
 import { toRaw, reactive, readonly, ReactiveFlags } from './reactive'
