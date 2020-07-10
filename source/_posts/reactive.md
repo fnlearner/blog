@@ -251,7 +251,7 @@ export function toRaw<T>(observed: T): T {
   )
 }
 ```
-然后跑了单测，发现所有有关toRaw的测试用例都报错，我靠.然后写了个小demo跑了一下，上面这个代码在进入倒数第二个调用栈的时候，observed是truey，然后进入最后一个调用栈的时候是返回undefined的，然后返回倒数第二个调用栈的时候还是undefined，这样一直到第一个栈返回的结果一直都是undefined.
+然后跑了单测，发现所有有关toRaw的测试用例都报错，我靠.然后写了个小demo跑了一下，上面这个代码在进入倒数第二个调用栈的时候，observed是truthy，然后进入最后一个调用栈的时候是返回undefined的，然后返回倒数第二个调用栈的时候还是undefined，这样一直到第一个栈返回的结果一直都是undefined.
 
 ```bash
 export function toRaw<T>(observed: T): T {
@@ -514,7 +514,7 @@ if (key === ReactiveFlags.IS_REACTIVE) {
 
 # 当1执行的时候，跳到get的时候此时的key是__v_raw
 # 这里截取get方法的一部分，第三个分支被我删去，此时不会直接return，而是继续往下执行，此时
-# 的return res是undefined，因此此时的arr并不是原始数据，当执行到2处时，又一次进入get方# 法，此时的key是indexOf，然后此时会返回 return Reflect.get(arrayInstrumentations, # key, receiver);而arrayInstrumentations['indexOf']这个方法又进入了1这个过程，从而造# 成调用栈爆栈的问题
+# 的return res是undefined,然后在返回toRaw方法的时候直接看第一层调用栈observed&&undefinde||observed,很明显这时候的arr返回的是observed，因此此时的arr并不是原始数据，当执行到2处时，又一次进入get方# 法，此时的key是indexOf，然后此时会返回 return Reflect.get(arrayInstrumentations, # key, receiver);而arrayInstrumentations['indexOf']这个方法又进入了1这个过程，从而造# 成调用栈爆栈的问题
 if (key === "__v_isReactive" /* IS_REACTIVE */) {
         return !isReadonly;
     }
