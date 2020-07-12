@@ -823,4 +823,88 @@ function clear(this: IterableCollections) {
 }
 
 ```
+forEach
+```bash
+unction createForEach(isReadonly: boolean, shallow: boolean) {
+  return function forEach(
+    this: IterableCollections,
+    callback: Function,
+    # 以为这个参数没有用，注释掉跑了下测试，只有一个用例报错，断言写的是callback内部的this等于thisArg
+    thisArg?: unknown
+  ) {
+    const observed = this
+    # 本来以为这里的observed算是重复变量，
+    # 所以下一行可以改成 
+    # const target = toRaw(this)
+    # 但是注意到wrappedCallback这个函数也用到了，取得是外层作用域的this，因此需要一个储存this的临时变量
+    const target = toRaw(observed)
+    const wrap = isReadonly ? toReadonly : shallow ? toShallow : toReactive
+    !isReadonly && track(target, TrackOpTypes.ITERATE, ITERATE_KEY)
+    # important: create sure the callback is
+    # 1. invoked with the reactive map as `this` and 3rd arg
+    # 2. the value received should be a corresponding reactive/readonly.
+    function wrappedCallback(value: unknown, key: unknown) {
+      return callback.call(thisArg, wrap(value), wrap(key), observed)
+    }
+    # 这句我一开始以为是遍历原型链上所有的属性以及方法并且进行this重定向，后来我对这句进行了一次debug，我发现下面这句应该是等同于
+    # return getProto(target)['forEach'].call(target,wrappedCallback)
+    # 我觉得这样写应该更容易理解吧～
+    return getProto(target).forEach.call(target, wrappedCallback)
+  }
+}
+```
+
+
+对迭代方法进行一个插桩，返回闭包
+```bash
+function createIterableMethod(
+  method: string | symbol,
+  isReadonly: boolean,
+  shallow: boolean
+) {
+  return function(
+    this: IterableCollections,
+    ...args: unknown[]
+  ): Iterable & Iterator {
+    const target = toRaw(this)#获取原始数据
+    const isMap = target instanceof Map
+    const isPair = method === 'entries' || (method === Symbol.iterator && isMap)
+    const isKeyOnly = method === 'keys' && isMap
+    # 考虑这里对apply可以用call来调用吗？
+    # 但是是不行，因为这里的arg是一个数组，而call的参数需要是一个参数或者多个参数，就是说call的参数只能是一个个的传！
+    # 并且这里的innerIterator返回的并不是一个array，而是一个iterator
+    const innerIterator = getProto(target)[method].apply(target, args)
+    const wrap = isReadonly ? toReadonly : shallow ? toShallow : toReactive
+    !isReadonly &&
+      track(
+        target,
+        TrackOpTypes.ITERATE,
+        isKeyOnly ? MAP_KEY_ITERATE_KEY : ITERATE_KEY
+      )
+    # return a wrapped iterator which returns observed versions of the
+    # values emitted from the real iterator
+    return {
+      # iterator protocol
+      next() {
+        const { value, done } = innerIterator.next()
+        return done
+          ? { value, done }
+          : {
+              # 只有在调用entries方法或者是Map类型对时候才需要返回【key，value】，并且让返回对数据保持响应式结构
+              value: isPair ? [wrap(value[0]), wrap(value[1])] : wrap(value),
+              done
+            }
+      },
+      # iterable protocol
+      # mdn对于重写迭代器有提到需要返回自身，否则会发生意料之外对错误
+      [Symbol.iterator]() {
+        return this
+      }
+    }
+  }
+}
+之后的函数都是通过条件来调用之前的函数，就跳哟拉～
+
+待续...(reactive还没看完)
+```
 OVER
