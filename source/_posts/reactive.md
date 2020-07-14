@@ -1,5 +1,5 @@
 ---
-title: reactive
+title: 响应式模块
 date: 2020-07-09 11:23:04
 tags: 
     - TypeScript  
@@ -907,4 +907,167 @@ function createIterableMethod(
 
 待续...(reactive还没看完)
 ```
+
+#### ref
+
+跟reactive类似，同样也是让一个value值变成一个响应式对象，但是不同的是reactive只能让object变成响应式对象，却不包括primitive值
+```bash
+# 收集 触发依赖
+import { track, trigger } from './effect'
+# 枚举类型
+import { TrackOpTypes, TriggerOpTypes } from './operations'
+# 通用方法
+import { isObject, hasChanged } from '@vue/shared'
+import { reactive, isProxy, toRaw } from './reactive'
+import { CollectionTypes } from './collectionHandlers'
+``` 
+要定义一个独一无二的字段Symbol类型，并且不想让ide识别出来
+```bash
+declare const RefSymbol: unique symbol
+export interface Ref<T = any> {
+  #
+   #Type differentiator only.
+   #We need this to be in public d.ts but don't want it to show up in IDE
+   #autocomplete, so we use a private Symbol instead.
+   #
+  [RefSymbol]: true
+  value: T
+}
+
+```
+toRefs的类型声明，每个在T里面的值都是ref类型
+```bash
+export type ToRefs<T = any> = { [K in keyof T]: Ref<T[K]> }
+```
+由于reactive仅接受object作为入参，所以对于primitive的值就返回它的值而不是调用reactive
+```bash
+const convert = <T extends unknown>(val: T): T =>
+  isObject(val) ? reactive(val) : val
+```
+ref 直接调用了`createRef`
+```bash
+export function ref(value?: unknown) {
+  return createRef(value)
+}
+# createRef直接返回一个object，
+# const count = ref(1)
+# ==>count = {
+#         __v_isRef:true,
+#         value:1
+#     }
+function createRef(rawValue: unknown, shallow = false) {
+  if (isRef(rawValue)) {
+    return rawValue
+  }
+  let value = shallow ? rawValue : convert(rawValue)
+  const r = {
+    __v_isRef: true,
+    get value() {
+      track(r, TrackOpTypes.GET, 'value')
+      return value
+    },
+    set value(newVal) {
+      if (hasChanged(toRaw(newVal), rawValue)) {
+        rawValue = newVal
+        value = shallow ? newVal : convert(newVal)
+        trigger(
+          r,
+          TriggerOpTypes.SET,
+          'value',
+          __DEV__ ? { newValue: newVal } : void 0
+        )
+      }
+    }
+  }
+  return r
+}
+```
+由于reactive只是针对于object的，对于内部的prop是没有做代理的，因此一旦解构，解构出来的值就已经失去了响应性
+```bash
+export function toRefs<T extends object>(object: T): ToRefs<T> {
+  if (__DEV__ && !isProxy(object)) {
+    console.warn(`toRefs() expects a reactive object but received a plain one.`)
+  }
+  const ret: any = {}
+  for (const key in object) {
+    ret[key] = toRef(object, key)
+  }
+  return ret
+}
+
+export function toRef<T extends object, K extends keyof T>(
+  object: T,
+  key: K
+): Ref<T[K]> {
+  return {
+    __v_isRef: true,
+    get value(): any {
+      return object[key]
+    },
+    set value(newVal) {
+      object[key] = newVal
+    }
+  } as any
+}
+
+```
+
+LIKE THIS
+```bash
+function f(){
+  const obj = reactive({count:10,age:10]})
+  return {
+    ...obj
+  }
+}
+const obj = f()
+let {count,age} = obj
+count # 10
+count++
+count # 11
+obj.count #10
+```
+
+```bash
+function f(){
+  const obj = reactive({count:10,age:10]})
+  return {
+    ...toRefs(obj)
+  }
+}
+const obj = f()
+const {count}  = obj # 这样解构出来的count是一个ref类型，它具备有响应性
+count.value # 10
+count.value++
+count.value #11
+obj.count.value # 11
+```
+
+看看这个很长很长的类型声明
+```bash
+export interface RefUnwrapBailTypes {}
+# 首先如果T是Ref类型的，那么把ref类型里面推断的数据类型作为类型传递给UnwrapRefSimple
+export type UnwrapRef<T> = T extends Ref<infer V>
+  ? UnwrapRefSimple<V>
+  : UnwrapRefSimple<T>
+# 然后UnwrapRefSimple根据传进来的类型来决定返回什么类型
+type UnwrapRefSimple<T> = T extends
+  | Function
+  | CollectionTypes
+  | BaseTypes
+  | Ref
+  | RefUnwrapBailTypes[keyof RefUnwrapBailTypes]
+  ? T
+  : T extends Array<any>
+    ? { [K in keyof T]: UnwrapRefSimple<T[K]> }
+    : T extends object ? UnwrappedObject<T> : T
+```
+这里的T[P]要用UnwrapRef嵌套应该是要考虑对象中有ref的情况
+```bash
+type UnwrappedObject<T> = { [P in keyof T]: UnwrapRef<T[P]> } & SymbolExtract<T>
+```
+
+
+#### effect
+
 OVER
