@@ -1067,7 +1067,151 @@ type UnwrapRefSimple<T> = T extends
 type UnwrappedObject<T> = { [P in keyof T]: UnwrapRef<T[P]> } & SymbolExtract<T>
 ```
 
-
 #### effect
+```bash
+# 两个枚举
+import { TrackOpTypes, TriggerOpTypes } from './operations'
+# 两个工具方法
+import { EMPTY_OBJ, isArray } from '@vue/shared'
 
+```
+
+储存依赖
+```bash
+# The main WeakMap that stores {target -> key -> dep} connections.
+# Conceptually, it's easier to think of a dependency as a Dep class
+# which maintains a Set of subscribers, but we simply store them as
+# raw Sets to reduce memory overhead.
+type Dep = Set<ReactiveEffect>
+type KeyToDepMap = Map<any, Dep>
+const targetMap = new WeakMap<any, KeyToDepMap>()
+```
+
+
+```bash
+export interface ReactiveEffect<T = any> {
+  (...args: any[]): T
+  _isEffect: true
+  id: number
+  # 是否停止监听
+  active: boolean
+  # 原始函数
+  raw: () => T
+  # 依赖数组
+  deps: Array<Dep>
+  # 选项
+  options: ReactiveEffectOptions
+}
+
+export interface ReactiveEffectOptions {
+  # 判断是否立即执行
+  lazy?: boolean
+  computed?: boolean
+  scheduler?: (job: ReactiveEffect) => void
+  onTrack?: (event: DebuggerEvent) => void
+  onTrigger?: (event: DebuggerEvent) => void
+  onStop?: () => void
+}
+
+export type DebuggerEvent = {
+  effect: ReactiveEffect
+  target: object
+  type: TrackOpTypes | TriggerOpTypes
+  key: any
+} & DebuggerEventExtraInfo
+
+export interface DebuggerEventExtraInfo {
+  newValue?: any
+  oldValue?: any
+  oldTarget?: Map<any, any> | Set<any>
+}
+```
+定义变量
+```bash
+# 储存effect的数组
+const effectStack: ReactiveEffect[] = []
+let activeEffect: ReactiveEffect | undefined
+
+export const ITERATE_KEY = Symbol(__DEV__ ? 'iterate' : '')
+export const MAP_KEY_ITERATE_KEY = Symbol(__DEV__ ? 'Map key iterate' : '')
+```
+判断是否是effect函数
+```bash
+export function isEffect(fn: any): fn is ReactiveEffect {
+  return fn && fn._isEffect === true
+}
+```
+创建effect函数
+```bash
+export function effect<T = any>(
+  fn: () => T,
+  options: ReactiveEffectOptions = EMPTY_OBJ
+): ReactiveEffect<T> {
+  if (isEffect(fn)) {
+    fn = fn.raw
+  }
+  const effect = createReactiveEffect(fn, options)
+  # 如果没有lazy参数，那么effect 函数立即执行
+  if (!options.lazy) {
+    effect()
+  }
+  return effect
+}
+let uid = 0
+# 删除effect里面的依赖的依赖的effect（很拗口）
+function cleanup(effect: ReactiveEffect) {
+  const { deps } = effect
+  if (deps.length) {
+    for (let i = 0; i < deps.length; i++) {
+      deps[i].delete(effect)
+    }
+    deps.length = 0
+  }
+}
+
+function createReactiveEffect<T = any>(
+  fn: (...args: any[]) => T,
+  options: ReactiveEffectOptions
+): ReactiveEffect<T> {
+  const effect = function reactiveEffect(...args: unknown[]): unknown {
+    # 把这句注释，一个用例报错 reactivity/effect › stop with scheduler
+    # 提示我们 在把effect调用了stop之后，scheduler不在执行
+    if (!effect.active) {
+      return options.scheduler ? undefined : fn(...args)
+    }
+    # 问个问题，if代码块里面的语句push了一次，然后pop了一次，那么为什么还需要判断effect是否存在effect栈中
+    if (!effectStack.includes(effect)) {
+      # 这里要删除effect的依赖项，是为了处理effect里面有条件语句的情况，
+      # 分支不处于激活状态时，修改分支上的属性不应该执行effect
+      cleanup(effect)
+      try {
+        enableTracking()
+        effectStack.push(effect)
+        activeEffect = effect
+        return fn(...args)
+      } finally {
+        effectStack.pop()
+        resetTracking()
+        activeEffect = effectStack[effectStack.length - 1]
+      }
+    }
+  } as ReactiveEffect
+  effect.id = uid++
+  effect._isEffect = true
+  effect.active = true
+  effect.raw = fn
+  effect.deps = []
+  effect.options = options
+  return effect
+}
+```
+提个问题，在effect函数里面的if语句块里面执行了一次`effectStack.push`,然后又执行了`effectStack.pop`,但是为什么要在if语句里面判断effect是否存在effectStack中，所以我把这个if语句删除，跑了一遍单测,然后，看结果吧
+![code](/images/reactive/code8.png)
+就很棒，居然用例都过了，我现在有点懵，难道这句真的是没有必要的吗？我就当它是没用的吧。
+
+然后看下面,为什么effectStack需要push和pop,先注释，然后跑测试，这个用例报错，这个测试用例用来测试嵌套的effect函数
+```bash
+reactivity/effect › should allow nested effects
+```
+**这个我真的真的调试了好久，枯了**
 OVER
