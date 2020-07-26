@@ -1205,9 +1205,6 @@ function createReactiveEffect<T = any>(
   return effect
 }
 ```
-提个问题，在effect函数里面的if语句块里面执行了一次`effectStack.push`,然后又执行了`effectStack.pop`,但是为什么要在if语句里面判断effect是否存在effectStack中，所以我把这个if语句删除，跑了一遍单测,然后，看结果吧
-![code](/images/reactive/code8.png)
-就很棒，居然用例都过了，我现在有点懵，难道这句真的是没有必要的吗？我就当它是没用的吧。
 
 然后看下面,为什么effectStack需要push和pop,先注释，然后跑测试，这个用例报错，这个测试用例用来测试嵌套的effect函数
 ```bash
@@ -1217,4 +1214,32 @@ reactivity/effect › should allow nested effects
 -----2020 7 15 更新
 这个模块，也忒难看懂了，所以我到现在还没全部看完，加上手头突然就多了两个项目，我过段时间再写5555
 
+---- 2020 7 26更新
+可以看到effStack仅仅在effect函数里面出现，在其他地方是没有的，
+
+```bash
+# 获取target的依赖
+let depsMap = targetMap.get(target)
+  if (!depsMap) {
+    targetMap.set(target, (depsMap = new Map()))
+  }
+  # 获取依赖里面key值的依赖
+  let dep = depsMap.get(key)
+  if (!dep) {
+    depsMap.set(key, (dep = new Set()))
+  }
+  # 这里是因为在执行effect的时候会执行一次cleanup函数，所以就每次都判断是否存在这个activeEffect
+  if (!dep.has(activeEffect)) {
+    dep.add(activeEffect)
+    activeEffect.deps.push(dep)
+    if (__DEV__ && activeEffect.options.onTrack) {
+      activeEffect.options.onTrack({
+        effect: activeEffect,
+        target,
+        type,
+        key
+      })
+    }
+  }
+```
 OVER
