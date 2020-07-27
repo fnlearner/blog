@@ -1321,6 +1321,7 @@ export function track(target: object, type: TrackOpTypes, key: unknown) {
 }
 
 ```
+<<<<<<< HEAD
 
 更新依赖
 
@@ -1479,3 +1480,38 @@ export function computed<T>(
 ```
 
 OVER
+=======
+**这个我真的真的调试了好久，枯了**
+-----2020 7 15 更新
+这个模块，也忒难看懂了，所以我到现在还没全部看完，加上手头突然就多了两个项目，我过段时间再写5555
+
+---- 2020 7 26更新
+可以看到effStack仅仅在effect函数里面出现，在其他地方是没有的，
+
+```bash
+# 获取target的依赖
+let depsMap = targetMap.get(target)
+  if (!depsMap) {
+    targetMap.set(target, (depsMap = new Map()))
+  }
+  # 获取依赖里面key值的依赖
+  let dep = depsMap.get(key)
+  if (!dep) {
+    depsMap.set(key, (dep = new Set()))
+  }
+  # 这里是因为在执行effect的时候会执行一次cleanup函数，所以就每次都判断是否存在这个activeEffect
+  if (!dep.has(activeEffect)) {
+    dep.add(activeEffect)
+    activeEffect.deps.push(dep)
+    if (__DEV__ && activeEffect.options.onTrack) {
+      activeEffect.options.onTrack({
+        effect: activeEffect,
+        target,
+        type,
+        key
+      })
+    }
+  }
+```
+OVER
+>>>>>>> 6234d805a209369b3e0ba9473aa922219a7f5abe
