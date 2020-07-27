@@ -1,22 +1,24 @@
 ---
 title: 响应式模块
 date: 2020-07-09 11:23:04
-tags: 
-    - TypeScript  
-    - Vue3
-categories: 
-    - TypeScript 
-    - Vue3
+tags:
+  - TypeScript
+  - Vue3
+categories:
+  - TypeScript
+  - Vue3
 ---
 
 ### 前言
 
-vue3出了beta，了解一下响应式数据的实现
-### 正文   
+vue3 出了 beta，了解一下响应式数据的实现
 
-#### reactive 
+### 正文
 
-下面这些是在reactive中导入的外部文件
+#### reactive
+
+下面这些是在 reactive 中导入的外部文件
+
 ```bash
 import { isObject, toRawType, def, hasOwn, makeMap } from '@vue/shared'##这些都是通用方法
 ## 两个handler，待会儿说为啥
@@ -25,7 +27,7 @@ import {
   readonlyHandlers,
   shallowReactiveHandlers,
   shallowReadonlyHandlers
-} from './baseHandlers' 
+} from './baseHandlers'
 import {
   mutableCollectionHandlers,
   readonlyCollectionHandlers,
@@ -34,8 +36,11 @@ import {
 ## 然后是ref，是为了给primitive类型的value做reactive
 import { UnwrapRef, Ref } from './ref'
 ```
+
 <!-- more -->
+
 然后是常量定义
+
 ```bash
 ## 枚举类型
 export const enum ReactiveFlags {
@@ -56,12 +61,15 @@ interface Target {
   [ReactiveFlags.READONLY]?: any
 }
 ```
-因为`typeof Map = 'function'`以及Set里面的四个类型都是，所以这里的collectionTypes要变成new Set<Function>
+
+因为`typeof Map = 'function'`以及 Set 里面的四个类型都是，所以这里的 collectionTypes 要变成 new Set<Function>
+
 ```bash
 const collectionTypes = new Set<Function>([Set, Map, WeakMap, WeakSet])
 ```
 
-然后是判断key是否存在的函数
+然后是判断 key 是否存在的函数
+
 ```bash
  #
  # Make a map and return a function for checking if a key
@@ -88,7 +96,6 @@ const isObservableType = /*#__PURE__*/ makeMap(
 )
 ```
 
-
 ```bash
 ## 判断value是否能被代理
 const canObserve = (value: Target): boolean => {
@@ -99,7 +106,6 @@ const canObserve = (value: Target): boolean => {
   )
 }
 ```
-
 
 ```bash
 ## only unwrap nested ref,用来给嵌套的ref解套
@@ -124,7 +130,9 @@ export function reactive(target: object) {
   )
 }
 ```
+
 作者的注释都写的很明白了。
+
 ```bash
 # 只有在属性中不带skip并且类型属于'Object,Array,Map,Set,WeakMap,WeakSet'并且属性没有被冻结的对象才能够被代理
 const canObserve = (value: Target): boolean => {
@@ -192,21 +200,27 @@ export const def = (obj: object, key: string | symbol, value: any) => {
   })
 }
 ```
-然后这里要说明为什么对target执行代理的时候handler要根据target的contstructor来调用不同的handler，拿Map举例子
+
+然后这里要说明为什么对 target 执行代理的时候 handler 要根据 target 的 contstructor 来调用不同的 handler，拿 Map 举例子
+
 ```bash
 const map = new Map()
 const proxy = new Proxy(map,{})
 proxy.set(1,1)
 ```
+
 一执行肯定就报错`Uncaught TypeError: Method Map.prototype.set called on incompatible receiver [object Object]`,提示信息告诉我们代码可以变成这样
+
 ```bash
 var map = new Map();
 var proxy = new Proxy(map, {});
 Map.prototype.set.call(proxy, 1, 1);
 ```
+
 所以这段代码`Map.prototype.set.call(proxy, 1, 1);`为什么这个报错，就是这个问题的核心
 
-那首先，Map这个呢把数据储存在自己的私有内部插槽中，类型[MapData]这样，然后这个插槽是跟Map对象自身绑定的。而Proxy不能完全模仿这样的行为，巧的是，这样的插槽Proxy学不来，所以在给它们做代理的时候把调用的实例重新指向Map这类结构的实例再进行调用实例方法就行
+那首先，Map 这个呢把数据储存在自己的私有内部插槽中，类型[MapData]这样，然后这个插槽是跟 Map 对象自身绑定的。而 Proxy 不能完全模仿这样的行为，巧的是，这样的插槽 Proxy 学不来，所以在给它们做代理的时候把调用的实例重新指向 Map 这类结构的实例再进行调用实例方法就行
+
 ```bash
 const PRIVATE = new WeakMap();
 const obj = {};
@@ -218,9 +232,11 @@ const proxy = new Proxy(obj, {});
 PRIVATE.get(proxy) === undefined // true
 PRIVATE.get(obj) === "private stuff" // true
 ```
-所以在上面创建响应式对象的时候要根据target的类型是判断用哪个的handler
+
+所以在上面创建响应式对象的时候要根据 target 的类型是判断用哪个的 handler
 
 之前的枚举类型中有定义了`IS_REACTIVE`和`IS_READONLY`，就是用来判断`isReactive`和`isReadonly`，由于创建只读对象的`readonly`方法和创建响应式对象的`reactive`都是通过`createReactiveObject`方法来进行调用的，所以可以通过判断响应式或者只读属性来判断是否是被代理过的对象
+
 ```bash
 export function isReactive(value: unknown): boolean {
   if (isReadonly(value)) {
@@ -247,7 +263,9 @@ export function markRaw<T extends object>(value: T): T {
   return value
 }
 ```
+
 对于`toRaw`这个方法我曾经把它改成这样
+
 ```bash
 export function toRaw<T>(observed: T): T {
   return (
@@ -255,7 +273,8 @@ export function toRaw<T>(observed: T): T {
   )
 }
 ```
-然后跑了单测，发现所有有关toRaw的测试用例都报错，我靠.然后写了个小demo跑了一下，上面这个代码在进入倒数第二个调用栈的时候，observed是truthy，然后进入最后一个调用栈的时候是返回undefined的，然后返回倒数第二个调用栈的时候还是undefined，这样一直到第一个栈返回的结果一直都是undefined.
+
+然后跑了单测，发现所有有关 toRaw 的测试用例都报错，我靠.然后写了个小 demo 跑了一下，上面这个代码在进入倒数第二个调用栈的时候，observed 是 truthy，然后进入最后一个调用栈的时候是返回 undefined 的，然后返回倒数第二个调用栈的时候还是 undefined，这样一直到第一个栈返回的结果一直都是 undefined.
 
 ```bash
 export function toRaw<T>(observed: T): T {
@@ -264,10 +283,11 @@ export function toRaw<T>(observed: T): T {
   )
 }
 ```
-执行这段代码的时候，同样的进入最后一个调用栈的时候返回的是undefined，但是返回倒数第二个调用栈的时候 `observed && undefined`是fasly值，所以倒数第二个调用栈返回的是一个具体的值`observed`,有、东西，智商捉急了。
 
+执行这段代码的时候，同样的进入最后一个调用栈的时候返回的是 undefined，但是返回倒数第二个调用栈的时候 `observed && undefined`是 fasly 值，所以倒数第二个调用栈返回的是一个具体的值`observed`,有、东西，智商捉急了。
 
-然后还剩几个方法,这个不用说，很明显是设置只读对象，handler也是有所区别的
+然后还剩几个方法,这个不用说，很明显是设置只读对象，handler 也是有所区别的
+
 ```bash
 export function readonly<T extends object>(
   target: T
@@ -315,6 +335,7 @@ export function shallowReadonly<T extends object>(
 ```
 
 #### baseHandler
+
 </br>
 </br>
 导入方法
@@ -349,6 +370,7 @@ const shallowReadonlyGet = /*#__PURE__*/ createGetter(true, true)
 ```
 
 对数组的这三个方法插桩，看的时候有个问题，为什么有个条件分支是`res === -1 || res === false`的时候继续执行，什么情况下会进入这个分支？
+
 ```bash
 const arrayInstrumentations: Record<string, Function> = {}
 ;['includes', 'indexOf', 'lastIndexOf'].forEach(key => {
@@ -370,7 +392,9 @@ const arrayInstrumentations: Record<string, Function> = {}
   }
 })
 ```
-把if的条件分支注释，只留下`return res`这个分支，然后跑单测，发现reactiveArray.spec.ts这个测试文件的测试用例` × Array identity methods should work with raw values (16 ms)`测试不通过。发现是在这里的时候不能测试通过
+
+把 if 的条件分支注释，只留下`return res`这个分支，然后跑单测，发现 reactiveArray.spec.ts 这个测试文件的测试用例`× Array identity methods should work with raw values (16 ms)`测试不通过。发现是在这里的时候不能测试通过
+
 ```bash
 const raw = {}
 const arr = reactive([{}, {}])
@@ -380,7 +404,9 @@ arr.push(raw)
 const observed = arr[2]
 expect(arr.indexOf(observed)).toBe(2)
 ```
-然后将测试不通过代码拷贝到vite的app中进行调试，发现是observed这个值不再是跟raw一样的{},猜测是劫持了数组的get方法并且对返回值进行了修改。然后进入到`createGetter`这个方法，其中有个逻辑,如果参数是对象，那么就要转成响应式对象。
+
+然后将测试不通过代码拷贝到 vite 的 app 中进行调试，发现是 observed 这个值不再是跟 raw 一样的{},猜测是劫持了数组的 get 方法并且对返回值进行了修改。然后进入到`createGetter`这个方法，其中有个逻辑,如果参数是对象，那么就要转成响应式对象。
+
 ```bash
 if (isObject(res)) {
     # Convert returned value into a proxy as well. we do the isObject check
@@ -389,10 +415,11 @@ if (isObject(res)) {
     return isReadonly ? readonly(res) : reactive(res);
 }
 ```
-很显然，`typeof {} === 'object'`，所以这个时候的observed不再是单纯的`{}`，它是一个响应式的`{}`，所以就能解释为什么在`res === -1 || res === false`的时候还要进行次函数执行的过程，这是为了防止获取到的值是经过转换的值，所以在分支里面的参数要对参数进行一次还原，SKR。
 
+很显然，`typeof {} === 'object'`，所以这个时候的 observed 不再是单纯的`{}`，它是一个响应式的`{}`，所以就能解释为什么在`res === -1 || res === false`的时候还要进行次函数执行的过程，这是为了防止获取到的值是经过转换的值，所以在分支里面的参数要对参数进行一次还原，SKR。
 
-下面这个就是劫持了get的方法，一条条逻辑看
+下面这个就是劫持了 get 的方法，一条条逻辑看
+
 ```bash
 function createGetter(isReadonly = false, shallow = false) {
   return function get(target: object, key: string | symbol, receiver: object) {
@@ -450,22 +477,28 @@ function createGetter(isReadonly = false, shallow = false) {
   }
 }
 ```
+
 先看这个,老样子，先注释，跑单测，看结果
+
 ```bash
 if (key === ReactiveFlags.IS_REACTIVE) {
       return !isReadonly
 }
 ```
+
 结果:
 ![code3](/images/reactive/code3.png)
 可以看到是`reactivity/reactive/Array › should make Array reactive`这个测试用例中的某个用例出现了问题，来看具体问题代码
+
 ```bash
     const observed = reactive(original)
     expect(observed).not.toBe(original)
     # 下面这段是问题代码
     expect(isReactive(observed)).toBe(true)
 ```
+
 看`isReactive`方法
+
 ```bash
 export function isReactive(value: unknown): boolean {
   if (isReadonly(value)) {
@@ -474,26 +507,30 @@ export function isReactive(value: unknown): boolean {
   return !!(value && (value as Target)[ReactiveFlags.IS_REACTIVE])
 }
 ```
-那现在可以看出，是在数组访问`ReactiveFlags.IS_REACTIVE`这个key的时候被劫持了，然后进
+
+那现在可以看出，是在数组访问`ReactiveFlags.IS_REACTIVE`这个 key 的时候被劫持了，然后进
+
 ```
 if (key === ReactiveFlags.IS_REACTIVE) {
       return !isReadonly
 }
 ```
-这个逻辑，至于为什么返回结果要对`isReadonly`取反，很显然，在`createReactiveObject`的时候reactive 和 readonly是互斥的关系，那么一个对象不是只读很显然就是响应式,那如果是原始对象呢？很显然，原始对象没有`__v_isReactive`这个属性，那么会返回undefined，用!!转义就是false；然后`key === ReactiveFlags.IS_READONLY`这个分支的逻辑就跟`REACTIVE`的逻辑一样的。
+
+这个逻辑，至于为什么返回结果要对`isReadonly`取反，很显然，在`createReactiveObject`的时候 reactive 和 readonly 是互斥的关系，那么一个对象不是只读很显然就是响应式,那如果是原始对象呢？很显然，原始对象没有`__v_isReactive`这个属性，那么会返回 undefined，用!!转义就是 false；然后`key === ReactiveFlags.IS_READONLY`这个分支的逻辑就跟`REACTIVE`的逻辑一样的。
 
 然后我把第三个分支给注释，WDM，直接爆栈了。。。
 </br>
-` RangeError: Maximum call stack size exceeded
-        at Object.get (<anonymous>)`
+`RangeError: Maximum call stack size exceeded at Object.get (<anonymous>)`
 四个测试用例没通过，我选了其中一个测试用例来复现`Array identity methods should work with raw values`
+
 ```bash
     const raw = {}
     const arr = reactive([{}, {}])
     arr.push(raw)
    console.log(arr.indexOf(raw))
 ```
-然后跟着代码走，先进入indexOf的这个方法，这个方法是被劫持的,走到这里
+
+然后跟着代码走，先进入 indexOf 的这个方法，这个方法是被劫持的,走到这里
 
 ```bash
 ['includes', 'indexOf', 'lastIndexOf'].forEach(key => {
@@ -531,7 +568,8 @@ if (key === "__v_isReactive" /* IS_REACTIVE */) {
 }
 ```
 
-有一个Symbol的判断逻辑一直没有理解，我TM
+有一个 Symbol 的判断逻辑一直没有理解，我 TM
+
 ```bash
   if (
       isSymbol(key)
@@ -541,7 +579,9 @@ if (key === "__v_isReactive" /* IS_REACTIVE */) {
       return res
     }
 ```
-我在单测里面执行测试用例的自定义Symbol访问
+
+我在单测里面执行测试用例的自定义 Symbol 访问
+
 ```bash
     const customSymbol = Symbol()
     const obj = {
@@ -557,7 +597,9 @@ if (key === "__v_isReactive" /* IS_REACTIVE */) {
     console.log(objRef.value[customSymbol])
     console.log(obj[customSymbol])
 ```
-然后我在demo里面也复制了这段代码
+
+然后我在 demo 里面也复制了这段代码
+
 ```bash
     const customSymbol = Symbol()
     const obj = {
@@ -572,9 +614,11 @@ if (key === "__v_isReactive" /* IS_REACTIVE */) {
     console.log(objRef.value[customSymbol])
     console.log(obj[customSymbol])
 ```
+
 我就先不管它了。
 
-然后是`createSetter`,是set方法的插桩
+然后是`createSetter`,是 set 方法的插桩
+
 ```bash
 function createSetter(shallow = false) {
   return function set(
@@ -587,7 +631,7 @@ function createSetter(shallow = false) {
     if (!shallow) {
       value = toRaw(value)
       # 这里就是判断赋值的时候新值如果不是ref，并且旧值是ref的情况下的赋值
-      # 这里有个条件是判断当前target是非数组，但是当我把这个条件删除的时候，210个测试用例仍然测试通过，所以这个条件不知道是干啥的。 
+      # 这里有个条件是判断当前target是非数组，但是当我把这个条件删除的时候，210个测试用例仍然测试通过，所以这个条件不知道是干啥的。
       if (!isArray(target) && isRef(oldValue) && !isRef(value)) {
         oldValue.value = value
         return true
@@ -616,10 +660,12 @@ function createSetter(shallow = false) {
 export const hasChanged = (value: any, oldValue: any): boolean =>
   value !== oldValue && (value === value || oldValue === oldValue)
 ```
+
 附一张疑问图
 ![confused](/images/reactive/code5.png)
 ![confused](/images/reactive/code6.png)
 剩下几个的逻辑就很单一了。
+
 ```bash
 # 删除逻辑 删除成功并且在target有这个key存在然后触发更新
 function deleteProperty(target: object, key: string | symbol): boolean {
@@ -643,10 +689,13 @@ function ownKeys(target: object): (string | number | symbol)[] {
   return Reflect.ownKeys(target)
 }
 ```
-然后在baseHandlers剩下的代码就是一些handler了，没有逻辑
+
+然后在 baseHandlers 剩下的代码就是一些 handler 了，没有逻辑
 
 #### collectionHandler
+
 导入文件，类型声明，以及一些方法
+
 ```bash
 import { toRaw, reactive, readonly, ReactiveFlags } from './reactive'
 import { track, trigger, ITERATE_KEY, MAP_KEY_ITERATE_KEY } from './effect'
@@ -677,8 +726,10 @@ const toShallow = <T extends unknown>(value: T): T => value
 const getProto = <T extends CollectionTypes>(v: T): any =>
   Reflect.getPrototypeOf(v)
 
-``` 
-看get方法
+```
+
+看 get 方法
+
 ```bash
 function get(
   target: MapTypes,
@@ -702,7 +753,8 @@ function get(
   }
 ```
 
-啊，然后看set方法 
+啊，然后看 set 方法
+
 ```bash
 function set(this: MapTypes, key: unknown, value: unknown) {
   value = toRaw(value)
@@ -732,7 +784,9 @@ function set(this: MapTypes, key: unknown, value: unknown) {
   return result
 }
 ```
-has 和 add方法
+
+has 和 add 方法
+
 ```bash
 function has(this: CollectionTypes, key: unknown): boolean {
   const target = toRaw(this)
@@ -748,7 +802,7 @@ function has(this: CollectionTypes, key: unknown): boolean {
   return has.call(target, key) || has.call(target, rawKey)
 }
 
-# 这个方法 就 嗯  一目了然 
+# 这个方法 就 嗯  一目了然
 function add(this: SetTypes, value: unknown) {
   # 可能会有疑问，这里的添加不是把value都做了一个转换吗？为什么Set里面会有响应式对象？
   # 这个方法只是劫持了Set方法的add，所以只有Set转变成响应式对象后调用了add方法，加入进去的value才只是普通的value值
@@ -763,7 +817,9 @@ function add(this: SetTypes, value: unknown) {
   return result
 }
 ```
-执行这段代码，在set转为响应式对象前后分别把响应式对象entry加入
+
+执行这段代码，在 set 转为响应式对象前后分别把响应式对象 entry 加入
+
 ```bash
 const raw = new Set();
 const entry = reactive({});
@@ -772,13 +828,14 @@ const set = reactive(raw);
 // console.log(set.has(entry));
 set.add(entry)
 ```
-看log结果
+
+看 log 结果
 ![code7](/images/reactive/code7.png)
 
-从图里可以很明显的看出 添加了两个相同的对象，但是一个是原始值，一个是代理对象，说明之前那个问题，Set结构里面是可以有代理对象的，只要在Set被reactive之前加入就行，在被reactive之后添加的数据就只是原始数据，而不是代理对象了，这里的原始数据指的是没有被Proxy
+从图里可以很明显的看出 添加了两个相同的对象，但是一个是原始值，一个是代理对象，说明之前那个问题，Set 结构里面是可以有代理对象的，只要在 Set 被 reactive 之前加入就行，在被 reactive 之后添加的数据就只是原始数据，而不是代理对象了，这里的原始数据指的是没有被 Proxy
 
+deleteEntry 跟 set 逻辑有点相似,区别就在于调用的方法不一样
 
-deleteEntry 跟set 逻辑有点相似,区别就在于调用的方法不一样
 ```bash
 
 function deleteEntry(this: CollectionTypes, key: unknown) {
@@ -804,6 +861,7 @@ function deleteEntry(this: CollectionTypes, key: unknown) {
 ```
 
 clear 方法
+
 ```bash
 function clear(this: IterableCollections) {
   const target = toRaw(this)
@@ -823,7 +881,9 @@ function clear(this: IterableCollections) {
 }
 
 ```
+
 forEach
+
 ```bash
 unction createForEach(isReadonly: boolean, shallow: boolean) {
   return function forEach(
@@ -834,7 +894,7 @@ unction createForEach(isReadonly: boolean, shallow: boolean) {
   ) {
     const observed = this
     # 本来以为这里的observed算是重复变量，
-    # 所以下一行可以改成 
+    # 所以下一行可以改成
     # const target = toRaw(this)
     # 但是注意到wrappedCallback这个函数也用到了，取得是外层作用域的this，因此需要一个储存this的临时变量
     const target = toRaw(observed)
@@ -854,8 +914,8 @@ unction createForEach(isReadonly: boolean, shallow: boolean) {
 }
 ```
 
-
 对迭代方法进行一个插桩，返回闭包
+
 ```bash
 function createIterableMethod(
   method: string | symbol,
@@ -910,7 +970,8 @@ function createIterableMethod(
 
 #### ref
 
-跟reactive类似，同样也是让一个value值变成一个响应式对象，但是不同的是reactive只能让object变成响应式对象，却不包括primitive值
+跟 reactive 类似，同样也是让一个 value 值变成一个响应式对象，但是不同的是 reactive 只能让 object 变成响应式对象，却不包括 primitive 值
+
 ```bash
 # 收集 触发依赖
 import { track, trigger } from './effect'
@@ -920,8 +981,10 @@ import { TrackOpTypes, TriggerOpTypes } from './operations'
 import { isObject, hasChanged } from '@vue/shared'
 import { reactive, isProxy, toRaw } from './reactive'
 import { CollectionTypes } from './collectionHandlers'
-``` 
-要定义一个独一无二的字段Symbol类型，并且不想让ide识别出来
+```
+
+要定义一个独一无二的字段 Symbol 类型，并且不想让 ide 识别出来
+
 ```bash
 declare const RefSymbol: unique symbol
 export interface Ref<T = any> {
@@ -935,16 +998,22 @@ export interface Ref<T = any> {
 }
 
 ```
-toRefs的类型声明，每个在T里面的值都是ref类型
+
+toRefs 的类型声明，每个在 T 里面的值都是 ref 类型
+
 ```bash
 export type ToRefs<T = any> = { [K in keyof T]: Ref<T[K]> }
 ```
-由于reactive仅接受object作为入参，所以对于primitive的值就返回它的值而不是调用reactive
+
+由于 reactive 仅接受 object 作为入参，所以对于 primitive 的值就返回它的值而不是调用 reactive
+
 ```bash
 const convert = <T extends unknown>(val: T): T =>
   isObject(val) ? reactive(val) : val
 ```
+
 ref 直接调用了`createRef`
+
 ```bash
 export function ref(value?: unknown) {
   return createRef(value)
@@ -982,7 +1051,9 @@ function createRef(rawValue: unknown, shallow = false) {
   return r
 }
 ```
-由于reactive只是针对于object的，对于内部的prop是没有做代理的，因此一旦解构，解构出来的值就已经失去了响应性
+
+由于 reactive 只是针对于 object 的，对于内部的 prop 是没有做代理的，因此一旦解构，解构出来的值就已经失去了响应性
+
 ```bash
 export function toRefs<T extends object>(object: T): ToRefs<T> {
   if (__DEV__ && !isProxy(object)) {
@@ -1013,6 +1084,7 @@ export function toRef<T extends object, K extends keyof T>(
 ```
 
 LIKE THIS
+
 ```bash
 function f(){
   const obj = reactive({count:10,age:10]})
@@ -1044,6 +1116,7 @@ obj.count.value # 11
 ```
 
 看看这个很长很长的类型声明
+
 ```bash
 export interface RefUnwrapBailTypes {}
 # 首先如果T是Ref类型的，那么把ref类型里面推断的数据类型作为类型传递给UnwrapRefSimple
@@ -1062,12 +1135,15 @@ type UnwrapRefSimple<T> = T extends
     ? { [K in keyof T]: UnwrapRefSimple<T[K]> }
     : T extends object ? UnwrappedObject<T> : T
 ```
-这里的T[P]要用UnwrapRef嵌套应该是要考虑对象中有ref的情况
+
+这里的 T[P]要用 UnwrapRef 嵌套应该是要考虑对象中有 ref 的情况
+
 ```bash
 type UnwrappedObject<T> = { [P in keyof T]: UnwrapRef<T[P]> } & SymbolExtract<T>
 ```
 
 #### effect
+
 ```bash
 # 两个枚举
 import { TrackOpTypes, TriggerOpTypes } from './operations'
@@ -1077,6 +1153,7 @@ import { EMPTY_OBJ, isArray } from '@vue/shared'
 ```
 
 储存依赖
+
 ```bash
 # The main WeakMap that stores {target -> key -> dep} connections.
 # Conceptually, it's easier to think of a dependency as a Dep class
@@ -1086,7 +1163,6 @@ type Dep = Set<ReactiveEffect>
 type KeyToDepMap = Map<any, Dep>
 const targetMap = new WeakMap<any, KeyToDepMap>()
 ```
-
 
 ```bash
 export interface ReactiveEffect<T = any> {
@@ -1126,7 +1202,9 @@ export interface DebuggerEventExtraInfo {
   oldTarget?: Map<any, any> | Set<any>
 }
 ```
+
 定义变量
+
 ```bash
 # 储存effect的数组
 const effectStack: ReactiveEffect[] = []
@@ -1135,13 +1213,17 @@ let activeEffect: ReactiveEffect | undefined
 export const ITERATE_KEY = Symbol(__DEV__ ? 'iterate' : '')
 export const MAP_KEY_ITERATE_KEY = Symbol(__DEV__ ? 'Map key iterate' : '')
 ```
-判断是否是effect函数
+
+判断是否是 effect 函数
+
 ```bash
 export function isEffect(fn: any): fn is ReactiveEffect {
   return fn && fn._isEffect === true
 }
 ```
-创建effect函数
+
+创建 effect 函数
+
 ```bash
 export function effect<T = any>(
   fn: () => T,
@@ -1205,13 +1287,195 @@ function createReactiveEffect<T = any>(
   return effect
 }
 ```
-提个问题，在effect函数里面的if语句块里面执行了一次`effectStack.push`,然后又执行了`effectStack.pop`,但是为什么要在if语句里面判断effect是否存在effectStack中，所以我把这个if语句删除，跑了一遍单测,然后，看结果吧
-![code](/images/reactive/code8.png)
-就很棒，居然用例都过了，我现在有点懵，难道这句真的是没有必要的吗？我就当它是没用的吧。
 
-然后看下面,为什么effectStack需要push和pop,先注释，然后跑测试，这个用例报错，这个测试用例用来测试嵌套的effect函数
+提个问题，在 effect 函数里面的 if 语句块里面执行了一次`effectStack.push`,然后又执行了`effectStack.pop`,但是为什么要在 if 语句里面判断 effect 是否存在 effectStack 中，所以我把这个 if 语句删除，这是为了防止套娃。在 effect 里面调用 effect 本身，避免无限递归（小声 bb，我只看懂了这层）
+
+track 函数，这是为了收集依赖
+
 ```bash
-reactivity/effect › should allow nested effects
+export function track(target: object, type: TrackOpTypes, key: unknown) {
+  if (!shouldTrack || activeEffect === undefined) {
+    return
+  }
+  let depsMap = targetMap.get(target)
+  if (!depsMap) {
+    targetMap.set(target, (depsMap = new Map()))
+  }
+  let dep = depsMap.get(key)
+  if (!dep) {
+    depsMap.set(key, (dep = new Set()))
+  }
+  # 在收集依赖前执行了cleanup方法
+  if (!dep.has(activeEffect)) {
+    dep.add(activeEffect)
+    activeEffect.deps.push(dep)
+    if (__DEV__ && activeEffect.options.onTrack) {
+      activeEffect.options.onTrack({
+        effect: activeEffect,
+        target,
+        type,
+        key
+      })
+    }
+  }
+}
+
 ```
-**这个我真的真的调试了好久，枯了**
+
+更新依赖
+
+```bash
+
+export function trigger(
+  target: object,
+  type: TriggerOpTypes,
+  key?: unknown,
+  newValue?: unknown,
+  oldValue?: unknown,
+  oldTarget?: Map<unknown, unknown> | Set<unknown>
+) {
+  const depsMap = targetMap.get(target)
+  if (!depsMap) {
+    // never been tracked
+    return
+  }
+
+  const effects = new Set<ReactiveEffect>()
+  const add = (effectsToAdd: Set<ReactiveEffect> | undefined) => {
+    if (effectsToAdd) {
+      effectsToAdd.forEach(effect => {
+      # 判断是否需要收集依赖或者effect是否重复
+        if (effect !== activeEffect || !shouldTrack) {
+          effects.add(effect)
+        } else {
+          # the effect mutated its own dependency during its execution.
+          # this can be caused by operations like foo.value++
+          # do not trigger or we end in an infinite loop
+        }
+      })
+    }
+  }
+
+  if (type === TriggerOpTypes.CLEAR) {
+    # collection being cleared
+    # trigger all effects for target
+    depsMap.forEach(add)
+  } else if (key === 'length' && isArray(target)) {
+    depsMap.forEach((dep, key) => {
+      if (key === 'length' || key >= (newValue as number)) {
+        add(dep)
+      }
+    })
+  } else {
+    # schedule runs for SET | ADD | DELETE
+    if (key !== void 0) {
+      add(depsMap.get(key))
+    }
+    #如果是增加或者删除数据的行为，还要再往相应队列中增加监听函数
+    # also run for iteration key on ADD | DELETE | Map.SET
+    const isAddOrDelete =
+      type === TriggerOpTypes.ADD ||
+      (type === TriggerOpTypes.DELETE && !isArray(target))
+    # 这个逻辑需要什么时候走到，比如对数据进行push操作时，劫持的key其实是length，此时的key确实不是0，但是depsMap.get(0)其实是为空的
+    # 而depsMap.get('length')才是真的有相应effect，所以需要补充第二个逻辑
+    # 假如第一个逻辑和第二个逻辑都执行了，那还是只会执行一次effect的
+    # 理由是add中的effects这是一个set结构，自动去重
+    if (
+      isAddOrDelete ||
+      (type === TriggerOpTypes.SET && target instanceof Map)
+    ) {
+      #如果原始数据是数组，则key为length，否则为迭代行为标识符
+      add(depsMap.get(isArray(target) ? 'length' : ITERATE_KEY))
+    }
+    if (isAddOrDelete && target instanceof Map) {
+      add(depsMap.get(MAP_KEY_ITERATE_KEY))
+    }
+  }
+
+  const run = (effect: ReactiveEffect) => {
+    if (__DEV__ && effect.options.onTrigger) {
+      effect.options.onTrigger({
+        effect,
+        target,
+        key,
+        type,
+        newValue,
+        oldValue,
+        oldTarget
+      })
+    }
+    # 这里对computed进行区分，因为computed 对象中自带scheduler函数
+    if (effect.options.scheduler) {
+      effect.options.scheduler(effect)
+    } else {
+      effect()
+    }
+  }
+# 运行所有计算数据的监听方法
+  effects.forEach(run)
+}
+
+```
+computed
+```bash
+export function computed<T>(getter: ComputedGetter<T>): ComputedRef<T>
+export function computed<T>(
+  options: WritableComputedOptions<T>
+): WritableComputedRef<T>
+export function computed<T>(
+  getterOrOptions: ComputedGetter<T> | WritableComputedOptions<T>
+) {
+  let getter: ComputedGetter<T>
+  let setter: ComputedSetter<T>
+
+  if (isFunction(getterOrOptions)) {
+    getter = getterOrOptions
+    setter = __DEV__
+      ? () => {
+          console.warn('Write operation failed: computed value is readonly')
+        }
+      : NOOP
+  } else {
+    getter = getterOrOptions.get
+    setter = getterOrOptions.set
+  }
+
+  let dirty = true
+  let value: T
+  let computed: ComputedRef<T>
+
+  const runner = effect(getter, {
+    lazy: true,
+    scheduler: () => {
+      if (!dirty) {
+        dirty = true
+        trigger(computed, TriggerOpTypes.SET, 'value')
+      }
+    }
+  })
+  computed = {
+    __v_isRef: true,
+    [ReactiveFlags.IS_READONLY]:
+      isFunction(getterOrOptions) || !getterOrOptions.set,
+
+    // expose effect so computed can be stopped
+    effect: runner,
+    get value() {
+       # 跑单测可以发现这个是为了防止重复计算的。
+      if (dirty) {
+        value = runner()
+        dirty = false
+      }
+      # 收集依赖
+      track(computed, TrackOpTypes.GET, 'value')
+      return value
+    },
+    set value(newValue: T) {
+      setter(newValue)
+    }
+  } as any
+  return computed
+}
+```
+
 OVER
