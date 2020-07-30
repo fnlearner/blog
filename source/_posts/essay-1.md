@@ -12,7 +12,7 @@ categories: essay
 1. 使用 blob 形式的 url 来创建`worker`,`worker`的内容应该是函数的系列化版本，然后立即返回函数的返回值
 
 2. 返回值是一个`promise`，它监听了`worker`的`onmessage` and `onerror`两个事件，返回从主线程发送过来的数据或者是抛出一个错误
-
+<!-- more -->
 ```bash
 const runAsync = fn => {
   const worker = new Worker(

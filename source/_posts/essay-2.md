@@ -18,7 +18,7 @@ function Title() {
   return <h1>Welcome to this application</h1>;
 }
 ```
-
+<!-- more -- >
 **带有 prop 的函数式组件**
 
 声明 props 类型并将 prop 传递给 jsx
