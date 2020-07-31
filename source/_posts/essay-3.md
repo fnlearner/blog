@@ -1,7 +1,8 @@
 ---
 title: docker
 date: 2020-07-31 12:30:10
-tags:
+tags: dockers
+categories: essay
 ---
 
 ## 介绍
