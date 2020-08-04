@@ -80,7 +80,7 @@ deploy:
   type: git
   repo: https://github.com/fnlearner/fnlearner.github.io.git
   branch: master
-  ignore_hidden: false
+# ignore_hidden: false
 # search enable
 search:
   path: search.xml
