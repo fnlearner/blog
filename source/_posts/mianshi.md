@@ -194,7 +194,19 @@ http传输在哪个层进行传输？
 
 ### promise
 
+Promise 对象是一个代理对象（代理一个值），被代理的值在Promise对象创建时可能是未知的。它允许你为异步操作的成功和失败分别绑定相应的处理方法（handlers）。 这让异步方法可以像同步方法那样返回值，但并不是立即返回最终执行结果，而是一个能代表未来出现的结果的promise对象
 
+```bash
+const data = Promise.resolve(2)
+```
+这个就算是使用了resolve，那么data也不会被赋值成2，而是一个promise对象
+，只有在调用了then方法后才会得到真正对值
+
+```bash
+Promise.resolve(2).then(res=>console.log(res))
+# 这时候就会输出22
+```
+同时 then方法接受两个函数类型对参数，一个是onfulfilled，一个是onrejected，前者在调用resolve的时候进入，后者则是在调用reject或者抛出错误的时候调用，因此catch也可以被叫做是then的语法糖，因为catch方法可以等于then(null,onRejected)
 ### typescript
 
 在ts中 interface 和 type 的区别？
