@@ -18,6 +18,7 @@ tags:
 10. 客户端服务端根据三个随机random各自生成对称密钥
 11. 用生成的对称密钥加密一段握手信息，发送给服务端。双端验证。
 12. 后续加密用生成的对称密钥加密
+<!--more -->
 ## 输入URL到页面渲染过程
 1. 浏览器进程拼接URL，加协议
 2. 网络进程根据URl做DNS解析
@@ -84,9 +85,16 @@ parseInt Number 两者区别
 
 ## CSRF
 
-1. httpOnly
+1. SameSite
+    + Lax
+    + Strict
+    + None
 2. x-frame-option
 3. csp
+    + default-src
+    + image-src
+    + media-src
+    + script-src
 4. token
 5. refer/origin
 
@@ -105,6 +113,9 @@ parseInt Number 两者区别
 6. 对核心内容启用SSR
 
 ## 跨域
+
 CORS
+
 img
+
 script
