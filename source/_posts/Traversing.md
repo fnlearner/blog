@@ -7,8 +7,8 @@ tags: JavaScript
 ### 深度优先遍历
 从某个顶点v出发，首先访问该顶点然后依次从它的各个未被访问的邻接点出发深度优先搜索遍历图，直至图中所有和v有路径相通的顶点都被访问到
 <!-- more -->
-```
-/*递归*/
+```bash
+# 递归
 let deepTraversal1 = (node, nodeList = []) => {
   if (node !== null) {
     nodeList.push(node)
@@ -22,8 +22,8 @@ let deepTraversal1 = (node, nodeList = []) => {
   return nodeList
 }
 ```
-```
-/*递归*/
+```bash
+# 递归
 let deepTraversal2= (node)=>{
   let nodes=[];
   if(node!== null){
@@ -39,8 +39,8 @@ let deepTraversal2= (node)=>{
 }
 ```
 
-```
-/*非递归*/
+```bash
+# 非递归
 let deepTraversal2=(node)=>{
   let stack =[];
   let nodes=[];
@@ -63,7 +63,7 @@ let deepTraversal2=(node)=>{
 ```
 ### 广度优先遍历
 从某顶点v出发，在访问了v之后依次访问v的各个未曾访问过的邻接点，然后分别从这些邻接点出发依次访问它们的邻接点，并使得“先被访问的顶点的邻接点先于后被访问的顶点的邻接点被访问，直至图中所有已被访问的顶点的邻接点都被访问到
-```
+```bash
 let widthTraversal2=(node)=>{
   let nodes=[];
   let stack=[];
