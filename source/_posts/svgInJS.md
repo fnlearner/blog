@@ -26,7 +26,6 @@ function webpackContext(req) {
 + keys 
 + resolve
 ```bash
-
 webpackContext.keys = function webpackContextKeys() {
 	return Object.keys(map);
 };
@@ -34,7 +33,7 @@ webpackContext.resolve = webpackContextResolve;
 webpackContext.id = "./src/icons/svg sync \\.svg$";
 ```
 
-在使用```const requireAll = requireContext => requireContext.keys().map(requireContext)```之后，会得到一个Module的数组,数组的每一项就是执行import后的Module
+再使用`const requireAll = requireContext => requireContext.keys().map(requireContext)`之后，会得到一个Module的数组,数组的每一项就是执行import后的Module
 ![dom](/images/svg-in-js/map.png)
 ![image](/images/svg-in-js/image.png)
 Module数组
