@@ -25,6 +25,7 @@ function webpackContext(req) {
 + id
 + keys 
 + resolve
+<!-- more -->
 ```bash
 webpackContext.keys = function webpackContextKeys() {
 	return Object.keys(map);
