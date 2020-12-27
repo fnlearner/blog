@@ -11,7 +11,7 @@ tags:
   <div class="child">Child</div>
 </div>
 ```
-css
+css≠
 ```bash
 .parent {
   display: flex;
