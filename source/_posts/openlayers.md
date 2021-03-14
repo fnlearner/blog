@@ -16,6 +16,8 @@ const img = new Image()
 const url = '/static/img.ppng'
 img.url = url
 ```
+
+<!-- more  -->
 在渲染map对象时，我用到是layer下的image，在给定的source这个属性值，我用ImageCanvas来渲染自定义的图层。这是一开始写的代码,但是在这段代码中，会有两个问题：
 
 - 第一个问题是在画布初始渲染的时候会渲染不出来的，必须在缩放层级之后画布才能正常显示；
