@@ -13,7 +13,7 @@ The ECMAScript language specification describes them as follows:
 
 在JS中，每个变量能够同时被赋值引用类型和原始类型。因此，如果null意味着 不是一个对象，JS也需要一个初值意味着 既不是 引用类型 也不是 原始类型。那个值就是undefined。
 
-
+<!-- more -->
 If a variable myVar has not been initialized yet, its value is undefined:
 
 ```bash

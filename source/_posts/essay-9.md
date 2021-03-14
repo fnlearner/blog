@@ -9,8 +9,7 @@ tags: JavsScript
 全局属性 NaN 的值表示不是一个数字（Not-A-Number）。
 
 NaN 属性的初始值就是 NaN，和 Number.NaN 的值一样。在现代浏览器中（ES5中）， NaN 属性是一个不可配置（non-configurable），不可写（non-writable）的属性。但在ES3中，这个属性的值是可以被更改的，但是也应该避免覆盖。  --- mdn
-
-
+<!-- more -->
 NaN是唯一一个自身不相等的数字，判断一个值是否是NaN，主要是用两种方法来判断，一个是NaN，一个是Number.isNaN。
 
 ```bash
