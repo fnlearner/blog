@@ -12,7 +12,7 @@ categories:
 ### 前言
 
 好奇provide怎么实现的，然后呢就去扒了下源码hhh，看了下provide的function，有点懵,provide的代码在runtime-core/src/apiInject.ts里面
-```bash
+```js
 export interface InjectionKey<T> extends Symbol {}
 
 export function provide<T>(key: InjectionKey<T> | string, value: T) {
@@ -40,7 +40,7 @@ export function provide<T>(key: InjectionKey<T> | string, value: T) {
 <!-- more -->
 有点纳闷为啥parentProvides === provides 的时候就可以判断当前的实例调用了provide，然后我用尤大的那个vite写了个demo，父元素调用provide，子元素也调用provide
 <br>App.vue
-```bash
+```js
 <template>
   <img alt="Vue logo" src="./assets/logo.png" />
   <HelloWorld msg="Hello Vue 3.0 + Vite" />
@@ -67,7 +67,7 @@ export default {
 <br>
 ```
 HelloWorld.vue
-```bash
+```html
 <template>
 	<h1>{{ msg }}</h1>
 	<button @click="count++">count is: {{ count }}</button>
@@ -104,7 +104,7 @@ export default defineComponent({
 ```
 
 在debug的时候在调用栈里面发现在调用mount的时候以此调用了render,patch,processComponent,mountComponent..这些方法，render和patch应该是和dom相关，然后看processComponent
-```bash
+```js
   const processComponent = (n1, n2, container, anchor, parentComponent, parentSuspense, isSVG, optimized) => {
         if (n1 == null) {
             if (n2.shapeFlag & 512 /* COMPONENT_KEPT_ALIVE */) {
@@ -120,7 +120,7 @@ export default defineComponent({
     };
 ```
 emmm看起来还是跟dom相关,直接看渲染组件的时候干了啥吧。
-```bash
+```js
  const mountComponent = (initialVNode, container, anchor, parentComponent, parentSuspense, isSVG, optimized) => {
         const instance = (initialVNode.component = createComponentInstance(initialVNode, parentComponent, parentSuspense)); //看这个实例
         //省略代码
@@ -132,7 +132,7 @@ emmm看起来还是跟dom相关,直接看渲染组件的时候干了啥吧。
 <br>
 createComponentInstance
 
-```bash
+```js
 function createComponentInstance(vnode, parent, suspense) {
     // inherit parent app context - or - if root, adopt from root vnode
     // 继承父级app上下文，如果是root，调整为根节点

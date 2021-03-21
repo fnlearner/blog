@@ -1,7 +1,7 @@
 ---
 title: 今日随笔(2-10)
 date: 2021-02-10 15:13:29
-tags: JavsScript 
+tags: JavaScript 
 ---
 
 #### NaN 和 Number.isNaN
