@@ -2,9 +2,10 @@
 title: 理解 flex-basis
 date: 2020-11-14 21:52:55
 tags:
+    - css
 ---
 上个html代码
-```bash
+```html
 <div class="parent">
   <div class="child">Child</div>
   <div class="child">Child</div>
@@ -12,7 +13,7 @@ tags:
 </div>
 ```
 css≠
-```bash
+```css
 .parent {
   display: flex;
 }
@@ -52,7 +53,7 @@ body{
 </div>
 </html>
 
-```bash
+```css
 .child {
   flex: [flex-grow] [flex-shrink] [flex-basis];
 }

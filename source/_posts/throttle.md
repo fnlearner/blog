@@ -8,9 +8,9 @@ tags: JavaScript
 Creates a throttled function that only invokes the provided function at most once per every wait milliseconds
 
 ---
-
 使用setTimeout 和 clearTimeout 对给定对方法节流。fn使用`Function.prototype.apply()`this上下文应用到函数中并且提供必要到参数arguments。使用`Date.now()`收集上一次函数的调用时间。没有给定第二个参数 `wait`的情况，默认设置时间间隔为0
-```bash
+<!-- more -->
+```js
 const throttle = (fn, wait) => {
   let inThrottle, lastFn, lastTime;
   return function() {
@@ -36,7 +36,7 @@ const throttle = (fn, wait) => {
 
 ---
 ##### for instance
-```bash
+```js
 window.addEventListener(
   'resize',
   throttle(function(evt) {

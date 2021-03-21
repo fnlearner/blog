@@ -10,7 +10,7 @@ categories: JavaScript
 ## grid
 
 css
-```
+```css
 .main{
         display: grid;
         grid-template-columns:repeat(auto-fill,27rem);
@@ -24,7 +24,7 @@ css
 ```
 html
 <!-- more -->
-```
+```html
 <div class="main">
                 <div class="item"></div>
                 <div class="item"></div>
@@ -73,7 +73,7 @@ html
 ## table
 
 css
-```
+```css
 .container{
     display: table;
     width: 100%;
@@ -88,7 +88,7 @@ css
 }
 ```
 html
-```
+```html
     <div class="container">
         <div class="item">item</div>
         <div class="item">item</div>
@@ -126,7 +126,7 @@ html
 ## flex
 
 css
-```
+```css
 .main{
     display: flex;
     flex-wrap: wrap;
@@ -141,7 +141,7 @@ css
 ```
 html
 
-```
+```html
 <div class="main">
     <div class="item"></div>
     <div class="item"></div>
@@ -190,7 +190,7 @@ html
 
 ## 媒体查询
 
-```
+```css
 @media screen and (min-width:240px) {
     html, body, button, input, select, textarea {
         font-size:9px;
@@ -217,7 +217,7 @@ html
 
 ## JS设置html的font-size大小
 
-```
+```js
 document.documentElement.style.fontSize = document.documentElement.clientWidth / 750 + 'px';
 ```
 
