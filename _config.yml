@@ -83,7 +83,7 @@ deploy:
 # ignore_hidden: false
 # search enable
 search:
-  path: ./public/search.xml
+  path: search.xml
   field: post
   format: html
   limit: 10000
