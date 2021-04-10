@@ -42,3 +42,16 @@ for (let C of [Array, String, Uint8Array]) {
                             configurable: true });
 }
 ```
+
+#### 2021-3-21 更新
+
+![proposal](/images/item/proposal.png)
+
+item方法更名为at方法
+
+`Spec-compliant polyfills using the old name of .item(): Array.prototype.item, String.prototype.item`
+
+
+The original iteration of this proposal proposed the name of the method to be .item(). Unfortunately, this was found out to be not web compatible. Libraries, notably YUI2 and YUI3, were duck-typing objects to be DOM collections based on the presence of a .item property. Please see [#28](https://github.com/tc39/proposal-relative-indexing-method/issues/28), [#31](https://github.com/tc39/proposal-relative-indexing-method/issues/31), and [#32](https://github.com/tc39/proposal-relative-indexing-method/issues/32) for more details.
+
+Captured below is the original motivation for choosing the .item() name and the original concerns.

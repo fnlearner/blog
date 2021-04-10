@@ -6,7 +6,7 @@ categories: tool
 ---
 
 ### 防抖
-```
+```js
 function debounce(func, wait) {
     let timeout = null;
     return function () {
@@ -26,7 +26,7 @@ function debounce(func, wait) {
 ```
 <!-- more -->
 ### 节流
-```
+```js
 function throttle(func, wait) {
     let previous = 0;
     return function() {
@@ -563,17 +563,17 @@ hashBrowser(JSON.stringify({ a: 'a', b: [1, 2, 3, 4], foo: { c: 'bar' } })).then
 
 ### 自定义事件
 
-```
+```js
 const triggerEvnet = (el,eventType,detail) => el.dispatchEvent(new CustomEvent(eventType,detail));
 ```
 用法
-```
+```js
 triggerEvnet(document.getElementById('id'),'click');//触发前需要先注册方法，addEventListener或者attachEvent
 ```
 
 ### isWritableStream
 检查给定参数是否是可写的流体
-```
+```js
 const isWriteable = val => val !== null &&
   typeof val === 'object' &&
   typeof val.pipe === 'function' &&
@@ -581,7 +581,7 @@ const isWriteable = val => val !== null &&
   typeof val._writableState === 'object';
 ```
 Node环境中使用
-```
+```js
 const fs = require('fs');
 isWritableStream(fs.createWriteStream('test.txt')); // true
 ```
@@ -589,7 +589,7 @@ isWritableStream(fs.createWriteStream('test.txt')); // true
 ### 打乱数组顺序
 
 洗牌算法
-```
+```js
 const shuffle = (arr) => {
   let m = arr.length;
   while(m){
@@ -598,4 +598,29 @@ const shuffle = (arr) => {
   }
   return arr;
 }
+```
+
+### 反解套
+```js
+
+const unflattenObject = obj =>
+  Object.keys(obj).reduce((acc, k) => {
+    if (k.indexOf('.') !== -1) {
+      const keys = k.split('.');
+      Object.assign(
+        acc,
+        JSON.parse(
+          '{' +
+            keys.map((v, i) => (i !== keys.length - 1 ? `"${v}":{` : `"${v}":`)).join('') +
+            obj[k] +
+            '}'.repeat(keys.length)
+        )
+      );
+    } else acc[k] = obj[k];
+    return acc;
+  }, {});
+```
+example
+```js
+unflattenObject({ 'a.b.c': 1, d: 1 }); // { a: { b: { c: 1 } }, d: 1 }
 ```
