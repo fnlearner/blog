@@ -5,67 +5,85 @@ tags: JavaScript
 categories: tool
 ---
 
+### instanceOf 
+```js
+function _instanceof(a,b){
+  while(a){
+      if(a.__proto__ === b.prototype){
+          return true
+      }else{
+          a = a.__proto__;
+      }
+  return false;
+  }
+}
+```
 ### reduce
 
 ```js
-Array.prototype.myReduce = function(fn,intialValue){
-  const arr = this
-  const [begin,...remain]  = arr
-  const hasInitialValue = initialValue !== void 0
-  let pre = hasInitialValue ? begin : initialValue
-  const array = hasInitialValue ? remain:arr
-  for(let i=0;i<array.length;i++){
-    pre = fn(pre,array[i],i,array)
+Array.prototype.myReduce = function (fn, initialValue) {
+  const arr = this;
+  const [begin] = arr;
+  let pre = initialValue || begin;
+
+  const startIndex = initialValue === void 0 ? 1 : 0;
+  for (let i = startIndex; i < arr.length; i++) {
+    pre = fn(pre, arr[i]);
   }
   return pre;
-}
+};
 ```
 
 ### 防抖
+
 ```js
 function debounce(func, wait) {
-    let timeout = null;
-    return function () {
-        let context = this;
-        let args = arguments;
+  let timeout = null;
+  return function () {
+    let context = this;
+    let args = arguments;
 
-        if (timeout) {
-          clearTimeout(timeout);
-          timeout = null;
-        };
-        
-        timeout = setTimeout(() => {
-            func.apply(context, args);
-        }, wait);
+    if (timeout) {
+      clearTimeout(timeout);
+      timeout = null;
     }
+
+    timeout = setTimeout(() => {
+      func.apply(context, args);
+    }, wait);
+  };
 }
 
-const debounce = (fn,delay = 300)=>{
-  let timer = null
-  return function(...args){
-    clearTimeout(timer)
-    timer = setTimeout(()=>fn(...args),delay)
-  }
-
-}
+const debounce = (fn, delay = 300) => {
+  let timer = null;
+  return function (...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
+  };
+};
 ```
+
 <!-- more -->
+
 ### 节流
+
 ```js
 function throttle(func, wait) {
-    let previous = 0;
-    return function() {
-        let now = Date.now();
-        let context = this;
-        let args = arguments;
-        if (now - previous > wait) {
-            func.apply(context, args);
-            previous = now;
-        }
+  let previous = 0;
+  return function () {
+    let now = Date.now();
+    let context = this;
+    let args = arguments;
+    if (now - previous > wait) {
+      func.apply(context, args);
+      previous = now;
     }
+  };
 }
 ```
+
 ### 判断是否是数组
+
 ```
 let arr=[];
 Array.isArray(arr);
@@ -91,7 +109,9 @@ function getTime(_time,joiner,joiner2){
   return result;
 }
 ```
+
 ### 深合并
+
 ```
  * @see merge
  * @param {Object} obj1 Object to merge
@@ -117,6 +137,7 @@ function deepMerge(/* obj1, obj2, obj3, ... */) {
 ```
 
 ### 正则表达式
+
 ```
 const matchTime = /(?<=\s+\-\s+)(.)+|(.)+(?=\s+\-\s+)/g;//将xx年xx月xx日-xx年xx月xx日的时间格式切割
 const regx_positiveInt = /^[0-9]*[1-9][0-9]*$/; //正整数
@@ -126,7 +147,9 @@ const regx_ip=/^((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?
 ```
 
 ### 大数相加
-由于JavaScript中不管整数还是小数都是Number类型，它的实现是遵循 IEEE 754标准，储存方式是以双精度浮点数储存的，可以表示十进制的15或者16位有效数字，所以当进行运算的数字超过这个范围的时候，就会用有精度缺失的问题，导致计算不准确，所以在大数加减的时候需要转成字符串来做，或者es6+有个BigInt类型也支持做大数加减，或者可以选择npm上的大数加减插件，比如number-precision
+
+由于 JavaScript 中不管整数还是小数都是 Number 类型，它的实现是遵循 IEEE 754 标准，储存方式是以双精度浮点数储存的，可以表示十进制的 15 或者 16 位有效数字，所以当进行运算的数字超过这个范围的时候，就会用有精度缺失的问题，导致计算不准确，所以在大数加减的时候需要转成字符串来做，或者 es6+有个 BigInt 类型也支持做大数加减，或者可以选择 npm 上的大数加减插件，比如 number-precision
+
 ```
   var addStrings = function(num1, num2) {
     const maxLen = Math.max.apply(null, [num1.length, num2.length]);
@@ -149,6 +172,7 @@ const regx_ip=/^((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?
 ```
 
 ### 深克隆
+
 ```
 const isObject = (item)=>{
   return Object.prototype.toString.call(item) === '[object Object]';
@@ -173,7 +197,7 @@ const deepClone=function(obj){
         }
         else{
           cloneObj[key] = obj[key];
-        }  
+        }
       }
     }
     return cloneObj;
@@ -192,7 +216,9 @@ function deepCopy(original) {
 }
 
 ```
+
 ### 深层更新
+
 ```
 function deepUpdate(original, keys, value) {
   if (keys.length === 0) {
@@ -222,7 +248,9 @@ function deepUpdate(original, keys, value) {
 }
 
 ```
+
 ### 深层冻结
+
 ```
 function deepFreeze(value) {
   if (Array.isArray(value)) {
@@ -237,15 +265,16 @@ function deepFreeze(value) {
     Object.freeze(value);
   } else {
     // Nothing to do: primitive values are already immutable
-  } 
+  }
   return value;
 }
 ```
+
 ### 基于现有对象的自定义方法
 
-PS:(不建议直接污染原型链，类型Date.prototype.xxx=function(){}这样的写法)
+PS:(不建议直接污染原型链，类型 Date.prototype.xxx=function(){}这样的写法)
 
-个人比较喜欢寄生组合继承或者es6的calss继承，比如要写一个基于Date的format方法
+个人比较喜欢寄生组合继承或者 es6 的 calss 继承，比如要写一个基于 Date 的 format 方法
 
 ```
 class DateSelf extends Date{
@@ -282,7 +311,7 @@ DateSelf.formatter=function(time){
 }
 ```
 
-###  判断对象类型
+### 判断对象类型
 
 ```
 Object.toType = (function toType(global) {
@@ -295,7 +324,7 @@ Object.toType = (function toType(global) {
 })(this)
 ```
 
-### 用promsie异步加载图像
+### 用 promsie 异步加载图像
 
 ```
 functin load(image,attributes){
@@ -358,7 +387,9 @@ functin load(image,attributes){
 ```
 
 ### 获取类型
+
 ({}).toString.call(obj) 的用法与 Object.prototype.toString.call(obj)一样。这两个返回的格式是[object [class]].
+
 ```
 const toType = (obj) =>{
    return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase()
@@ -389,37 +420,44 @@ toType(new Boolean(true)); //"boolean"
 
 ```
 
-几个内置对象没有构造函数，因此不能用instanceof来判断类型
+几个内置对象没有构造函数，因此不能用 instanceof 来判断类型
+
 ```
 Math instanceof Math //TypeError
 ```
-一个window可以包含多个iframe框架，意味着包含多个全局上下文，因此意味着每个类型有多个构造器，在这样的环境下，给定的对象类型不能保证是给定的构造函数的实例
+
+一个 window 可以包含多个 iframe 框架，意味着包含多个全局上下文，因此意味着每个类型有多个构造器，在这样的环境下，给定的对象类型不能保证是给定的构造函数的实例
+
 ```
 const ifFrame = document.createElement('iframe');
 document.body.appendChild(ifFrame);
-const IFrameArray = window.frames[1].Array; 
+const IFrameArray = window.frames[1].Array;
 const array = new IFrameArray();
 
 array instanceof IFrameArray //true
 array instanceof Array // false
 ```
-由于array的constructor是iframe中的Array,因此即使array 与 此时的window上下文中的Array都是数组范畴，但是instanceof是基于原型链来判断的，array的原型链是并没有指向当前window下的Array,因此array instanceof Array 为 false
 
-之前的toType有个问题,当toType的传参是window,window内置方法以及DOM时，有很长一串的结果返回时
+由于 array 的 constructor 是 iframe 中的 Array,因此即使 array 与 此时的 window 上下文中的 Array 都是数组范畴，但是 instanceof 是基于原型链来判断的，array 的原型链是并没有指向当前 window 下的 Array,因此 array instanceof Array 为 false
+
+之前的 toType 有个问题,当 toType 的传参是 window,window 内置方法以及 DOM 时，有很长一串的结果返回时
+
 ```
 toType(window);
 //"global" (Chrome) "domwindow" (Safari) "window" (FF/IE9) "object" (IE7/IE8)
- 
+
 toType(document);
 //"htmldocument" (Chrome/FF/Safari) "document" (IE9) "object" (IE7/IE8)
- 
+
 toType(document.createElement('a'));
 //"htmlanchorelement" (Chrome/FF/Safari/IE) "object" (IE7/IE8)
- 
+
 toType(alert);
 //"function" (Chrome/FF/Safari/IE9) "object" (IE7/IE8)
 ```
-改进一下toType方法,将这个方法挂载到Object上,但是不要挂载到prototype上，将这个方法写成IIFE+闭包
+
+改进一下 toType 方法,将这个方法挂载到 Object 上,但是不要挂载到 prototype 上，将这个方法写成 IIFE+闭包
+
 ```
 Object.toType = (function toType(global) {
   return function(obj) {
@@ -434,11 +472,15 @@ Object.toType([1,2,3]); //"array" (all browsers)
 Object.toType(/a-z/); //"regexp" (all browsers)
 Object.toType(JSON); //"json" (all browsers)
 ```
+
 这个方法也不是万能的,如果扔进来一个未知类型,则会抛出异常
+
 ```
 Object.toType(fff)//ReferenceError
 ```
+
 玩个好玩的，应该可以用具名组匹配来获取类型
+
 ```
 Object.toType = (function(global){
     const reg = /(?<type>(?<=\s+?)[A-Za-z]+)/;
@@ -452,13 +494,16 @@ Object.toType = (function(global){
     }
 })(this)
 ```
+
 ### takeRightWhile
 
 ```
 const takeRightWhile = (arr, func) =>
   arr.reduceRight((acc, el) => (func(el) ? acc : [el, ...acc]), []);
 ```
+
 用法
+
 ```
 takeRightWhile([1, 2, 3, 4], n => n < 3); // [3, 4]
 ```
@@ -473,7 +518,9 @@ const zip = (...arrays) => {
   });
 };
 ```
+
 用法
+
 ```
 zip(['a', 'b'], [1, 2], [true, false]); // [['a', 1, true], ['b', 2, false]]
 zip(['a'], [1, 2], [true, false]); // [['a', 1, true], [undefined, 2, false]]
@@ -489,6 +536,7 @@ const pipe = (...fns) => x => {
     },x)
 }
 ```
+
 用法
 
 ```
@@ -512,7 +560,9 @@ const elementIsVisibleInViewport = (el, partiallyVisible = false) => {
     : top >= 0 && left >= 0 && bottom <= innerHeight && right <= innerWidth;
 };
 ```
+
 用法
+
 ```
 elementIsVisibleInViewport(el); // false - (not fully visible)
 elementIsVisibleInViewport(el, true); // true - (partially visible)
@@ -524,7 +574,9 @@ elementIsVisibleInViewport(el, true); // true - (partially visible)
 //第一个函数允许多个参数，剩余函数仅允许一个参数
 const composeRight = (...fns) => fns.reduce((f,g)=>(...args)=>g(f(...args)));
 ```
+
 用法
+
 ```
 const add =(x,y) => x+y;
 const square = x => x**2;
@@ -538,12 +590,15 @@ const uniqueSymmetricDifference = (a, b) => [
   ...new Set([...a.filter(v => !b.includes(v)), ...b.filter(v => !a.includes(v))])
 ];
 ```
+
 用法
+
 ```
 uniqueSymmetricDifference([1, 2, 3], [1, 2, 4]); // [3, 4]
 ```
 
 ### 获取长度
+
 ```
 const size = val =>
     Array.isArray(val)
@@ -555,8 +610,8 @@ const size = val =>
             : 0;
 ```
 
-
 ### initialArrayWithRangeRight
+
 ```
 const initialArrayWithRangeRight = (end,start = 0, step = 1) => {
     return Array.from({length:Math.ceil(end-start+1)/step}).map((v,i,arr)=>{
@@ -564,12 +619,15 @@ const initialArrayWithRangeRight = (end,start = 0, step = 1) => {
     });
 }
 ```
+
 用法
+
 ```
 initialArrayWithRangeRight(5)// [5,4,3,2,1,0]
 ```
 
-### 创建加密hash
+### 创建加密 hash
+
 ```
 const hashBrowser = val =>
   crypto.subtle.digest('SHA-256', new TextEncoder('utf-8').encode(val)).then(h => {
@@ -580,72 +638,86 @@ const hashBrowser = val =>
     return hexes.join('');
   });
 ```
+
 用法
+
 ```
 hashBrowser(JSON.stringify({ a: 'a', b: [1, 2, 3, 4], foo: { c: 'bar' } })).then(console.log); // '04aa106279f5977f59f9067fa9712afc4aedc6f5862a8defc34552d8c7206393'
 ```
 
-
 ### 自定义事件
 
 ```js
-const triggerEvnet = (el,eventType,detail) => el.dispatchEvent(new CustomEvent(eventType,detail));
+const triggerEvnet = (el, eventType, detail) =>
+  el.dispatchEvent(new CustomEvent(eventType, detail));
 ```
+
 用法
+
 ```js
-triggerEvnet(document.getElementById('id'),'click');//触发前需要先注册方法，addEventListener或者attachEvent
+triggerEvnet(document.getElementById("id"), "click"); //触发前需要先注册方法，addEventListener或者attachEvent
 ```
 
 ### isWritableStream
+
 检查给定参数是否是可写的流体
+
 ```js
-const isWriteable = val => val !== null &&
-  typeof val === 'object' &&
-  typeof val.pipe === 'function' &&
-  typeof val._write === 'function' &&
-  typeof val._writableState === 'object';
+const isWriteable = (val) =>
+  val !== null &&
+  typeof val === "object" &&
+  typeof val.pipe === "function" &&
+  typeof val._write === "function" &&
+  typeof val._writableState === "object";
 ```
-Node环境中使用
+
+Node 环境中使用
+
 ```js
-const fs = require('fs');
-isWritableStream(fs.createWriteStream('test.txt')); // true
+const fs = require("fs");
+isWritableStream(fs.createWriteStream("test.txt")); // true
 ```
 
 ### 打乱数组顺序
 
 洗牌算法
+
 ```js
 const shuffle = (arr) => {
   let m = arr.length;
-  while(m){
-    const i = Math.floor(Math.random()*m--);
-    [arr[i],arr[m]] =[arr[m],arr[i]]; 
+  while (m) {
+    const i = Math.floor(Math.random() * m--);
+    [arr[i], arr[m]] = [arr[m], arr[i]];
   }
   return arr;
-}
+};
 ```
 
 ### 反解套
-```js
 
-const unflattenObject = obj =>
+```js
+const unflattenObject = (obj) =>
   Object.keys(obj).reduce((acc, k) => {
-    if (k.indexOf('.') !== -1) {
-      const keys = k.split('.');
+    if (k.indexOf(".") !== -1) {
+      const keys = k.split(".");
       Object.assign(
         acc,
         JSON.parse(
-          '{' +
-            keys.map((v, i) => (i !== keys.length - 1 ? `"${v}":{` : `"${v}":`)).join('') +
+          "{" +
+            keys
+              .map((v, i) => (i !== keys.length - 1 ? `"${v}":{` : `"${v}":`))
+              .join("") +
             obj[k] +
-            '}'.repeat(keys.length)
+            "}".repeat(keys.length)
         )
       );
     } else acc[k] = obj[k];
     return acc;
   }, {});
 ```
+
 example
+
 ```js
-unflattenObject({ 'a.b.c': 1, d: 1 }); // { a: { b: { c: 1 } }, d: 1 }
+unflattenObject({ "a.b.c": 1, d: 1 }); // { a: { b: { c: 1 } }, d: 1 }
 ```
