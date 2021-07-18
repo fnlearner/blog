@@ -27,6 +27,7 @@ of a web application.
 ![process](/images/worker/worker-process.jpeg)
 
 通过这个其实可以想到的是 并行可以提升执行效率，任务的拆分能减少页面的卡顿
+<!-- more -->
 
 #### 技术规范
 

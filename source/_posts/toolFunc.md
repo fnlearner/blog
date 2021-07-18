@@ -5,6 +5,22 @@ tags: JavaScript
 categories: tool
 ---
 
+### reduce
+
+```js
+Array.prototype.myReduce = function(fn,intialValue){
+  const arr = this
+  const [begin,...remain]  = arr
+  const hasInitialValue = initialValue !== void 0
+  let pre = hasInitialValue ? begin : initialValue
+  const array = hasInitialValue ? remain:arr
+  for(let i=0;i<array.length;i++){
+    pre = fn(pre,array[i],i,array)
+  }
+  return pre;
+}
+```
+
 ### 防抖
 ```js
 function debounce(func, wait) {
@@ -22,6 +38,15 @@ function debounce(func, wait) {
             func.apply(context, args);
         }, wait);
     }
+}
+
+const debounce = (fn,delay = 300)=>{
+  let timer = null
+  return function(...args){
+    clearTimeout(timer)
+    timer = setTimeout(()=>fn(...args),delay)
+  }
+
 }
 ```
 <!-- more -->
