@@ -12,6 +12,7 @@ tags: Vue
 ### 接收属性
 
 `defineProps`来接收从父级组件传递来的属性以及方法,能接收`string`类型的数组或者类型对象
+<!-- more -->
 example:
 ```js
 const props = defineProps({
