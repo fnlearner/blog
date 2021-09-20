@@ -1,30 +1,55 @@
-Array.prototype.myReduce = function(fn,initialValue){
-    const arr = this
-    const [begin]  = arr
-    let pre = initialValue || begin
-    
-    const startIndex = initialValue === void 0 ? 1:0
-    for(let i = startIndex; i < arr.length;i++){
-        pre = fn(pre,arr[i])
-    }    
-    return pre
-}
-const sum1 = [1,2,3,4].myReduce((pre,cur)=>pre+cur)
-const sum2 = [1,2,3,4].myReduce((pre,cur)=>pre+cur,2)
+const crypto = require('crypto')
 
-// console.log(sum1)
-// console.log(sum2)
-function _instanceof(a,b){
-  while(a){
-      if(a.__proto__ === b.prototype){
-          return true
-      }else{
-          a = a.__proto__;
-      }
-  return false;
+function hash (password, cb) {
+  const salt = crypto.randomBytes(128).toString('base64')
+  crypto.pbkdf2(password, salt, 10000, 64, 'sha512', cb)
+}
+
+let count = 0
+console.time('pbkdf2')
+for (let i = 0; i < 100; i++) {
+  hash('random_password', () => {
+    count++
+    if (count === 100) {
+      console.timeEnd('pbkdf2')
+    }
+  })
+}
+
+
+function INTERNAL () {}
+function isFunction (func) {
+  return typeof func === 'function'
+}
+function isObject (obj) {
+  return typeof obj === 'object'
+}
+function isArray (arr) {
+  return Array.isArray(arr)
+}
+
+const PENDING = 'pending'
+const FULFILLED = 'fulfilled'
+const REJECTED = 'rejected'
+
+function Promise(resolver){
+  // 假如传进来的参数不熟函数，返回
+  if(!isFunction(resolver)){
+    throw new Error('fail')
+  }
+  this.state = PENDING
+  this.value = void 0
+  this.queue = []
+  if(resolver !== INTERNAL){
+    safelyResolveThen(this, resolver)
   }
 }
-console.log(_instanceof([],Array));
-console.log(_instanceof(1,Array));
-console.log(_instanceof({},Object));
+Promise.prototype.then = function () {}
+Promise.prototype.catch = function () {}
 
+Promise.resolve = function () {}
+Promise.reject = function () {}
+Promise.all = function () {}
+Promise.race = function () {}
+
+module.exports = Promise
