@@ -90,3 +90,6 @@ html
 
 为什么会编译成行内样式？因为性能好 ，可以查看benchmark对比
 
+### defineExpose函数
+
+setup语法下子组件数据默认不暴露出去，父组件只能调用在子组件中使用defineExpose暴露的数据或者方法，详见vue3的文档

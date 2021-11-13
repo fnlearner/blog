@@ -15,7 +15,7 @@ timezone: Asia/Shanghai
 # url: https://github.com/fnlearner 
 url: https://fnlearner.github.io
 root: /
-permalink: :tag/:title.html
+permalink: :year/:month/:title/
 permalink_defaults:
 
 # Directory
