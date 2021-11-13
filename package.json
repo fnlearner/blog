@@ -3,7 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "deploy": "hexo clean && hexo g -d"
+    "deploy": "hexo clean && hexo g -d",
+    "cp":"cp google6c577ae6c63da979.html public/",
+    "generate":"hexo clean && hexo g",
+    "seo-deploy":"yarn generate && yarn cp && hexo d"
   },
   "hexo": {
     "version": "3.9.0"

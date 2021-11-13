@@ -6,7 +6,7 @@
 title: Personal Blog
 subtitle:
 description: 你找到我了呀！
-keywords:
+keywords: 前端 vue 
 author: ZJS
 language: zh-CN
 timezone: Asia/Shanghai
@@ -15,7 +15,7 @@ timezone: Asia/Shanghai
 # url: https://github.com/fnlearner 
 url: https://fnlearner.github.io
 root: /
-permalink: :year/:month/:day/:title/
+permalink: :tag/:title.html
 permalink_defaults:
 
 # Directory

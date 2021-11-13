@@ -1,8 +1,9 @@
 ---
 title: vue3
 date: 2021-09-20 21:24:21
-tags: Vue
-      JavaScript
+tags:  
+    - Vue 
+    - JavaScript
 ---
 
 ### intro
