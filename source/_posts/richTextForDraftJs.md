@@ -6,5 +6,9 @@ tags:
     - Rich Text
     - DraftJs
 ---
-{% pdf /pdf/expression.pdf %}
+<html>
+<embed src="/pdf/expression.pdf" type="application/pdf" width="100%" height="500px"
+
+</html>
+
 
