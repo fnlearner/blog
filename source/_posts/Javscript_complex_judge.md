@@ -8,7 +8,7 @@ categories: JavaScript
 在公司维护前人代码的时候，经常会遇见一堆的if-else语句
 ### if-else
 
-```
+```js
 const flag = (status)=>{
     if(status ==0){
         //do somethind
@@ -26,7 +26,7 @@ const flag = (status)=>{
 或许还可以用switch-case的写法
 ### switch-case
 
-```
+```js
 const flag = (status)=>{
     swtich(status){
         case 0:
@@ -48,7 +48,7 @@ const flag = (status)=>{
 
 然鹅如果需要判断的条件多的时候，如果继续用if-else的写法，那么工作量会翻倍
 
-```
+```js
 const flag = (status,type)=>{
     if(type==0){
         if(status ==0){
@@ -76,7 +76,7 @@ const flag = (status,type)=>{
 这种写法太麻瓜了吧，简直反人类
 
 ### Map
-```
+```js
 const actions = ()=>{
     function A(){
         return 'A'
@@ -99,7 +99,7 @@ flag(0,0);//A
 直接将逻辑封装起来，然后在另一个函数调用，看起来就干净很多！！！
 
 
-```
+```js
 const actions = ()=>{
     function A(){
         return 'A'
